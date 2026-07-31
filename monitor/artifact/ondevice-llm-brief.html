@@ -1,0 +1,1009 @@
+<title>On-Device LLM 브리핑</title>
+
+<style>
+  /* ── Tokens ─────────────────────────────────────────────
+     Palette: instrument panel. Blue-biased slate neutrals,
+     signal-cyan accent (measurement), copper reserved as a
+     semantic alert for 급상승 only. Mono carries the data layer. */
+  :root {
+    --ground:      #eef1f4;
+    --panel:       #ffffff;
+    --panel-sunk:  #e6eaef;
+    --rule:        #cdd5dd;
+    --rule-soft:   #dee4ea;
+    --ink:         #171c23;
+    --ink-2:       #3f4a56;
+    --ink-3:       #6b7783;
+    --signal:      #0b6577;
+    --signal-ink:  #084c5a;
+    --signal-wash: #ddeef1;
+    --copper:      #a84e18;
+    --copper-wash: #f7e6d9;
+    --shadow:      0 1px 2px rgba(23,28,35,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:      #10141b;
+      --panel:       #171c25;
+      --panel-sunk:  #1d2430;
+      --rule:        #2c353f;
+      --rule-soft:   #232b35;
+      --ink:         #e6eaef;
+      --ink-2:       #b3bdc8;
+      --ink-3:       #7f8b97;
+      --signal:      #4cc3d6;
+      --signal-ink:  #8bdbe7;
+      --signal-wash: #12313a;
+      --copper:      #e2954f;
+      --copper-wash: #33220f;
+      --shadow:      none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #10141b; --panel: #171c25; --panel-sunk: #1d2430;
+    --rule: #2c353f; --rule-soft: #232b35;
+    --ink: #e6eaef; --ink-2: #b3bdc8; --ink-3: #7f8b97;
+    --signal: #4cc3d6; --signal-ink: #8bdbe7; --signal-wash: #12313a;
+    --copper: #e2954f; --copper-wash: #33220f; --shadow: none;
+  }
+  :root[data-theme="light"] {
+    --ground: #eef1f4; --panel: #ffffff; --panel-sunk: #e6eaef;
+    --rule: #cdd5dd; --rule-soft: #dee4ea;
+    --ink: #171c23; --ink-2: #3f4a56; --ink-3: #6b7783;
+    --signal: #0b6577; --signal-ink: #084c5a; --signal-wash: #ddeef1;
+    --copper: #a84e18; --copper-wash: #f7e6d9;
+    --shadow: 0 1px 2px rgba(23,28,35,.05);
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 20px 72px;
+    overflow-x: hidden;
+  }
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  }
+
+  a { color: var(--signal); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 2px;
+  }
+
+  /* ── Masthead ── */
+  .masthead {
+    grid-column: 1 / -1;
+    border-bottom: 2px solid var(--ink);
+    padding: 44px 0 16px;
+    margin-bottom: 4px;
+  }
+  .eyebrow {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 11.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: clamp(26px, 4.2vw, 38px);
+    line-height: 1.14;
+    letter-spacing: -.022em;
+    font-weight: 700;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 17px;
+    line-height: 1.62;
+    color: var(--ink-2);
+    max-width: 66ch;
+    margin: 0 0 22px;
+    text-wrap: pretty;
+  }
+  .lede b { color: var(--ink); font-weight: 650; }
+
+  .tally { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 11.5px;
+    letter-spacing: .04em;
+    padding: 4px 9px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--panel);
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .chip b { color: var(--ink); font-weight: 700; }
+  .chip.hot { border-color: var(--copper); background: var(--copper-wash); color: var(--copper); }
+  .chip.hot b { color: var(--copper); }
+
+  /* ── Tally chips double as filters ──
+     Real <button>s, so they are keyboard operable and announce pressed state.
+     Pressed text uses --ground, not #fff, so contrast holds in both themes. */
+  button.chip {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 11.5px;
+    line-height: inherit;
+    cursor: pointer;
+  }
+  button.chip:hover { border-color: var(--signal); color: var(--signal); }
+  button.chip:hover b { color: var(--signal); }
+  button.chip:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+  button.chip[aria-pressed="true"] { background: var(--signal); border-color: var(--signal); color: var(--ground); }
+  button.chip[aria-pressed="true"] b { color: var(--ground); }
+  button.chip.hot[aria-pressed="true"] { background: var(--copper); border-color: var(--copper); color: var(--ground); }
+  button.chip.hot[aria-pressed="true"] b { color: var(--ground); }
+  .chip.static { cursor: default; }
+
+  .filter-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-top: 14px;
+    padding: 9px 12px;
+    border: 1px solid var(--signal);
+    border-radius: 3px;
+    background: var(--signal-wash);
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .filter-bar.is-on { display: flex; }
+  .filter-bar b { font-family: ui-monospace, Consolas, monospace; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .filter-bar button {
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    background: var(--panel);
+    color: var(--ink-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 3px 10px;
+  }
+  .filter-bar button:hover { border-color: var(--signal); color: var(--signal); }
+  .filter-bar button:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+  .empty-state {
+    display: none;
+    border: 1px dashed var(--rule);
+    border-radius: 3px;
+    padding: 22px 20px;
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.62;
+  }
+  .empty-state.is-on { display: block; }
+  .empty-state strong { display: block; color: var(--ink); font-size: 15px; margin-bottom: 8px; }
+
+  .is-hidden { display: none !important; }
+  .rail nav a.is-dim { opacity: .38; pointer-events: none; }
+
+  /* ── Index rail ── */
+  .rail { position: sticky; top: 20px; font-size: 13px; }
+  .rail nav { display: flex; flex-direction: column; }
+  .rail nav a {
+    padding: 7px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    color: var(--ink-2);
+    text-decoration: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .rail nav a:hover { color: var(--signal); }
+  .rail nav a span {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .rail-note {
+    margin-top: 22px;
+    padding: 12px 13px;
+    background: var(--panel-sunk);
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-3);
+  }
+  .rail-note strong { display: block; color: var(--ink-2); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-family: ui-monospace, Consolas, monospace; margin-bottom: 6px; }
+
+  /* Single-column frames: the index becomes a compact chip row instead of a full
+     screen of stacked links pushing the brief below the fold.
+     Placed after the base .rail rules above so it wins the cascade. */
+  @media (max-width: 900px) {
+    .rail { position: static; }
+    .rail nav { flex-flow: row wrap; gap: 6px; }
+    .rail nav a {
+      border: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      border-radius: 3px;
+      padding: 4px 9px;
+      background: var(--panel);
+      font-size: 12px;
+      display: inline-flex;
+      justify-content: flex-start;
+      gap: 0;
+    }
+    .rail nav a span { display: none; }
+    .rail-note { margin-top: 14px; }
+  }
+
+  /* ── Sections ── */
+  main { display: flex; flex-direction: column; gap: 46px; min-width: 0; }
+  section { scroll-margin-top: 20px; }
+  h2 {
+    font-size: 12px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin: 0 0 18px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  h2 em { font-style: normal; color: var(--signal); text-transform: none; letter-spacing: .02em; margin-left: 8px; }
+
+  .summary { display: flex; flex-direction: column; gap: 15px; margin: 0; padding: 0; list-style: none; }
+  /* NOT a grid container. A grid promotes every element child to its own grid
+     item and only anonymizes text runs, so <strong> spans and the text between
+     them would alternate into the narrow number column and shred the paragraph.
+     The number is taken out of flow instead, leaving the prose as normal inline text. */
+  .summary li {
+    position: relative;
+    padding-left: 34px;
+    font-size: 15px;
+    line-height: 1.62;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+  .summary li::before {
+    content: attr(data-n);
+    position: absolute;
+    left: 0;
+    top: .3em;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .summary strong { color: var(--ink); font-weight: 650; }
+
+  /* ── Issue entries: spec-sheet rows, not accent-rail cards ── */
+  .issue {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px 6px;
+    margin-bottom: 14px;
+  }
+  .issue-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .issue-title { display: flex; gap: 11px; align-items: baseline; min-width: 0; flex: 1 1 220px; }
+  .issue-title .idx {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    padding-top: 2px;
+  }
+  .issue-title h3 {
+    font-size: 17.5px;
+    line-height: 1.38;
+    letter-spacing: -.012em;
+    font-weight: 650;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  /* segmented attention readout — instrument, not progress bar */
+  .meter { display: flex; align-items: center; gap: 9px; flex: 0 1 auto; min-width: 0; }
+  .meter .num {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .meter .num i { font-style: normal; color: var(--ink-3); font-weight: 400; font-size: 11px; }
+  .ticks { display: flex; gap: 2px; }
+  .ticks u { display: block; width: 4px; height: 13px; background: var(--panel-sunk); border-radius: 1px; text-decoration: none; }
+  .ticks u.on { background: var(--signal); }
+  .issue[data-state="resurgence"] .ticks u.on { background: var(--copper); }
+  /* Narrow frames: 4px ticks are unreadable and steal room from the title.
+     The numeric readout carries the value. Placed after the base .ticks rules. */
+  @media (max-width: 520px) { .ticks { display: none; } }
+
+  .badge {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 10.5px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: 2.5px 7px;
+    border-radius: 2px;
+    border: 1px solid var(--signal);
+    color: var(--signal);
+    background: var(--signal-wash);
+    white-space: nowrap;
+  }
+  .badge.resurgence { border-color: var(--copper); color: var(--copper); background: var(--copper-wash); text-transform: none; letter-spacing: .02em; }
+
+  /* Two-column spec sheet at EVERY width. No breakpoint collapses it into a bare
+     vertical list — the label/value pairing is the whole point of the format, and
+     a narrow preview frame must not be able to destroy it. */
+  dl.spec { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 12px; }
+  dl.spec dt {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 13px 0 13px;
+    border-bottom: 1px solid var(--rule-soft);
+    white-space: nowrap;
+  }
+  dl.spec dd {
+    margin: 0;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    color: var(--ink-2);
+    font-size: 14.5px;
+    line-height: 1.6;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-wrap: pretty;
+  }
+  @media (max-width: 380px) {
+    dl.spec dt { border-bottom: 0; padding-bottom: 0; }
+    dl.spec dd { padding-top: 4px; }
+  }
+  dl.spec dd:last-of-type, dl.spec dt:last-of-type { border-bottom: 0; }
+  dl.spec .num-run { font-family: ui-monospace, Consolas, monospace; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  dl.spec .unverified { color: var(--copper); font-weight: 600; }
+  dl.spec dd strong { color: var(--ink); font-weight: 650; }
+  dl.spec dd.srcs { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+
+  /* ── Table ── */
+  .scroller { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 11px 13px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    background: var(--panel-sunk);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.t { font-weight: 600; color: var(--ink); min-width: 160px; }
+  td.s { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  td.d { color: var(--ink-2); min-width: 300px; line-height: 1.55; }
+
+  /* ── Plain lists ── */
+  ul.lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  ul.lines li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    color: var(--ink-2);
+    font-size: 14.5px;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+  ul.lines li:last-child { border-bottom: 0; }
+  ul.lines strong { color: var(--ink); font-weight: 650; }
+  .zap { color: var(--signal); font-family: ui-monospace, Consolas, monospace; font-size: 12px; letter-spacing: .05em; }
+
+  /* ── Callout / rules panel ── */
+  .panel {
+    background: var(--panel-sunk);
+    border-radius: 3px;
+    padding: 18px 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+  .panel h3 { font-size: 14.5px; margin: 0 0 10px; color: var(--ink); font-weight: 650; }
+  .panel ul { margin: 10px 0 0; padding-left: 20px; }
+  .panel li { margin-bottom: 6px; }
+  .panel code {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12.5px;
+    background: var(--panel);
+    border: 1px solid var(--rule-soft);
+    border-radius: 2px;
+    padding: 1px 5px;
+  }
+
+  details {
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--panel);
+    padding: 0 16px;
+  }
+  summary {
+    cursor: pointer;
+    padding: 13px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: "＋";
+    font-family: ui-monospace, Consolas, monospace;
+    color: var(--ink-3);
+    font-weight: 400;
+  }
+  details[open] summary::after { content: "－"; }
+  details[open] summary { border-bottom: 1px solid var(--rule-soft); }
+  .hist-body { padding: 14px 0 16px; }
+  .hist-body ol { margin: 0; padding-left: 22px; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+  .hist-body li { margin-bottom: 5px; }
+  .hist-date {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .06em;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    margin-top: 52px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 11.5px;
+    letter-spacing: .04em;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>On-Device LLM · Runtime · Compiler · 경량화</span>
+      <span>2026-07-31</span>
+      <span>회차 001 · 기준선</span>
+      <span>삼성전자 DX · AI Center</span>
+    </div>
+    <h1>병목이 연산에서 메모리로 옮겨갔다</h1>
+    <p class="lede">
+      온디바이스 LLM의 제약이 <b>TOPS에서 메모리 대역폭·용량</b>으로 완전히 이동했고, 업계 대응이 세 방향으로 갈라졌다 —
+      NPU 친화 <b>완전 정적 양자화</b>, <b>3D 스택 메모리 NPU</b>, <b>디스크·플래시 스트리밍 실행</b>.
+    </p>
+    <div class="tally" role="group" aria-label="집계 배지 — 누르면 해당 항목만 표시">
+      <button type="button" class="chip" data-filter="new" aria-pressed="false">신규 <b>13</b></button>
+      <button type="button" class="chip hot" data-filter="resurgence" aria-pressed="false">급상승 재보고 <b>0</b></button>
+      <button type="button" class="chip" data-filter="suppressed" aria-pressed="false">중복 생략 <b>0</b></button>
+      <button type="button" class="chip" data-filter="hot" aria-pressed="false">핫 이슈 <b>7</b></button>
+      <span class="chip static">검토 소스 <b>30+</b></span>
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <span id="filter-bar-text" role="status" aria-live="polite"></span>
+      <button type="button" id="filter-reset">전체 보기 (Esc)</button>
+    </div>
+  </header>
+
+  <aside class="rail">
+    <nav>
+      <a href="#summary">임원 요약<span>05</span></a>
+      <a href="#hot">핫 이슈<span>07</span></a>
+      <a href="#watch">주목 항목<span>06</span></a>
+      <a href="#tool">툴체인·릴리즈<span>07</span></a>
+      <a href="#people">연구자 동향<span>04</span></a>
+      <a href="#radar">레이더<span>05</span></a>
+      <a href="#dedup">중복 제거 규칙<span></span></a>
+      <a href="#trust">신뢰도 메모<span></span></a>
+      <a href="#history">회차 이력<span>01</span></a>
+    </nav>
+    <div class="rail-note">
+      <strong>회차 성격</strong>
+      seen-index가 비어 있는 첫 실행이므로 최근 1주 신규뿐 아니라 상반기 누적 중 현재도 유효한 항목을 함께 실었다.
+      다음 회차부터는 5일 중복 제거가 적용되어 신규·급상승 항목만 남는다.
+      <br><br>
+      상단 집계 배지를 누르면 해당 항목만 남는다. 0건인 배지도 눌러볼 것 — 왜 0건인지가 표시된다.
+    </div>
+  </aside>
+
+  <main>
+
+    <div class="empty-state" id="empty-state">
+      <strong id="empty-title"></strong>
+      <span id="empty-body"></span>
+    </div>
+
+    <section id="summary" data-narrative>
+      <h2>임원 요약 <em>5분 판독</em></h2>
+      <ul class="summary">
+        <li data-n="01"><strong>TOPS 경쟁은 사실상 끝났다.</strong> Meta 온디바이스 AI 총괄이 공개한 2026 정세 문서는 모바일 50–90 GB/s vs 데이터센터 GPU 2–3 TB/s, <strong>30–50배 대역폭 격차</strong>를 병목으로 못 박았다. Exynos NPU 경쟁력 지표를 TOPS에서 유효 대역폭·온칩 메모리·상주 모델 용량으로 재정의할 시점이다.</li>
+        <li data-n="02"><strong>Qualcomm은 메모리로 승부처를 옮겼다.</strong> X2 Elite/Plus 전 제품군에 80 TOPS를 균일 배치해 연산을 상품화하고, <strong>3D-DRAM 스택 NPU(40 TOPS + 4GB, 2026말~2027초)</strong>로 대역폭 축 선점을 노린다. 우리 로드맵의 대응 축이 TOPS면 이미 뒤진 경쟁이다.</li>
+        <li data-n="03"><strong>연산은 따라잡았고, 소프트웨어 스택이 남았다.</strong> Exynos 2600(2nm)은 GenAI 성능 +113%로 격차를 좁혔으나 Galaxy S26 실측 비교에서 Snapdragon 8 Elite가 여전히 우위. MediaTek NPU 990은 "에이전틱 AI + 전력효율 +56%"로 포지셔닝을 선점 중. 실사용 격차의 주 원인은 하드웨어 수치보다 <strong>런타임·컴파일러 성숙도와 개발자 생태계</strong>다.</li>
+        <li data-n="04"><strong>양자화 연구가 드디어 NPU 제약에 맞춰지기 시작했다.</strong> 학계 주류 PTQ(AWQ/GPTQ)는 동적 활성 양자화를 전제해 NPU에서 못 돌았다. Quant.npu는 정수 전용 완전 정적 양자화로 간극을 메워 실기 NPU에서 지연 최대 15.1% 감소. <strong>ENN 툴체인 양자화 프론트엔드가 이 흐름을 받고 있는지 점검이 필요하다.</strong></li>
+        <li data-n="05"><strong>런타임 표준화가 ExecuTorch로 기울고 있다.</strong> 기본 풋프린트 50KB, 백엔드 12종 이상, HF 인기 엣지 LLM 80% 이상 무수정 동작 — 그리고 <strong>그 목록에 Exynos/ENN이 없다.</strong> 백엔드 편입 여부가 향후 모델 공급 파이프라인 접근성을 결정한다.</li>
+      </ul>
+    </section>
+
+    <section id="hot">
+      <h2>핫 이슈 <em>attention ≥ 60</em></h2>
+
+      <article class="issue" data-state="new" data-tags="new hot">
+        <div class="issue-head">
+          <div class="issue-title">
+            <span class="idx">01</span>
+            <h3>Meta, "On-Device LLMs: State of the Union 2026" — 병목은 대역폭이라는 공식 선언</h3>
+          </div>
+          <div class="meter">
+            <span class="badge">New</span>
+            <span class="num">72<i>/100</i></span>
+            <span class="ticks"><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u></u><u></u><u></u></span>
+          </div>
+        </div>
+        <dl class="spec">
+          <dt>분류</dt><dd>전략 / 기준선</dd>
+          <dt>주체</dt><dd>Vikas Chandra (Senior Director &amp; Distinguished Scientist, AI @ Meta), Raghuraman Krishnamoorthi</dd>
+          <dt>핵심</dt><dd>온디바이스 LLM이 "연구 데모 → 양산 가능"으로 넘어왔다는 판정과 함께 남은 제약을 대역폭으로 특정. 아키텍처 측면에서는 소규모 스케일에서 <strong>deep-thin 구조(층 수 ↑, 차원 ↓)가 wide 구조보다 우세</strong>하다는 결론, 프론티어 릴리즈의 60% 이상이 MoE를 채택했다는 관측을 제시.</dd>
+          <dt>실측</dt><dd class="num-run">모바일 50–90 GB/s vs DC GPU 2–3 TB/s (30–50× 격차) · Apple A19 Pro ~35 TOPS · Snapdragon 8 Elite ~60 TOPS · MobileLLM 125M = iPhone 50 tok/s · Medusa/EAGLE 2.2–3.6× · KV 캐시 3비트 압축 시 품질 저하 미미</dd>
+          <dt>DX 시사점</dt><dd>NPU 스펙 경쟁 지표를 재정의해야 한다. "deep-thin 우세"는 자사 소형 모델(Gauss 계열) 아키텍처 탐색 방향에 직접 적용 가능한 결론.</dd>
+          <dt>근거</dt><dd>Tier A 조직 공식 정세 판단 +25 · 워치리스트 연구자 저자 +20 · 업계 인용 다수 +15 · 정량 근거 +10. 발행 2026-01-24이나 인용 기준선으로 현재도 유효.</dd>
+          <dt>출처</dt><dd class="srcs"><a href="https://v-chandra.github.io/on-device-llms/">v-chandra.github.io/on-device-llms</a></dd>
+        </dl>
+      </article>
+
+      <article class="issue" data-state="new" data-tags="new hot">
+        <div class="issue-head">
+          <div class="issue-title">
+            <span class="idx">02</span>
+            <h3>Qualcomm — 80 TOPS 전 스택 균일화 + 3D-DRAM 스택 NPU 로드맵</h3>
+          </div>
+          <div class="meter">
+            <span class="badge">New</span>
+            <span class="num">70<i>/100</i></span>
+            <span class="ticks"><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u></u><u></u><u></u></span>
+          </div>
+        </div>
+        <dl class="spec">
+          <dt>분류</dt><dd>하드웨어 / 플랫폼</dd>
+          <dt>주체</dt><dd>Qualcomm</dd>
+          <dt>핵심</dt><dd>CES 2026 발표 Snapdragon X2 Elite가 업계 예상(50 TOPS)을 넘는 <strong>80 TOPS를 X2 Plus까지 전 제품 스택에 균일 적용</strong> — 연산 성능을 차별화 요소에서 기본기로 내렸다. 이어지는 로드맵은 <strong>3D-DRAM 적층 NPU(40 TOPS + 4GB, 2026년 말~2027년 초)</strong>로 경쟁축을 대역폭·상주 용량으로 옮기는 신호. 소프트웨어 쪽은 2026-05 LLMWare.ai와 Snapdragon X PC에서 SLM 기반 엔터프라이즈 에이전틱 워크플로를 Hexagon NPU 가속으로 실행, 엣지 에이전트 레퍼런스 선점 중.</dd>
+          <dt>실측</dt><dd class="num-run">Snapdragon 8 Elite 듀얼 Hexagon = 8B 모델 약 5 tok/s (Llama 3.1 8B 자동차 질의 5.1 tok/s, NPU 단독) — 실사용 체감 하한선에 가까움, 대역폭 병목의 직접 증거</dd>
+          <dt>DX 시사점</dt><dd>대응 축을 TOPS가 아닌 <strong>메모리 서브시스템</strong>으로 잡아야 한다. 3D 적층 NPU 메모리는 파운드리·패키징 역량과 직결되므로 SLSI–파운드리 공동 로드맵 검토 사안. "NPU 가속 에이전틱 SDK" 레퍼런스 부재가 약점으로 굳어질 위험.</dd>
+          <dt>근거</dt><dd>Tier A 공식 발표 +25 · 상용 제품 전이 +15 · 광범위 언론 보도 +15 · 실측 포함 +10 · <span class="unverified">로드맵 수치는 2차 출처 −5</span></dd>
+          <dt>출처</dt><dd class="srcs"><a href="https://www.qualcomm.com/developer/blog/2026/05/local-agentic-ai-with-llmware-on-pcs-with-snapdragon-x-series">qualcomm.com/developer/blog</a><a href="https://markets.financialcontent.com/woonsocketcall/article/tokenring-2026-1-8-qualcomm-shatters-ai-pc-performance-barriers-with-snapdragon-x2-elite-launch-at-ces-2026">CES 2026 보도</a></dd>
+        </dl>
+      </article>
+
+      <article class="issue" data-state="new" data-tags="new hot">
+        <div class="issue-head">
+          <div class="issue-title">
+            <span class="idx">03</span>
+            <h3>Exynos 2600(2nm) vs Dimensity 9500 — 연산 격차는 좁혔고, 스택 격차가 남았다</h3>
+          </div>
+          <div class="meter">
+            <span class="badge">New</span>
+            <span class="num">66<i>/100</i></span>
+            <span class="ticks"><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u></u><u></u><u></u></span>
+          </div>
+        </div>
+        <dl class="spec">
+          <dt>분류</dt><dd>하드웨어 / 경쟁 구도</dd>
+          <dt>주체</dt><dd>Samsung SLSI · MediaTek · Qualcomm</dd>
+          <dt>핵심</dt><dd>Exynos 2600은 업계 최초 2nm 스마트폰 AP로 <strong>GenAI 성능 전세대(2500) 대비 +113%</strong>, 지연·전력 동시 개선을 내세웠고 Galaxy S26에 복귀. 다만 공개된 S26 실측 비교에서는 <strong>Snapdragon 8 Elite가 여전히 우위</strong>로 평가된다. MediaTek Dimensity 9500은 3nm이지만 <strong>NPU 990 + 에이전틱 AI + 전력효율 +56%</strong>로 온디바이스 LLM 지원을 명시적 마케팅 축으로 삼았다.</dd>
+          <dt>실측</dt><dd class="num-run">Exynos 2600 GenAI +113% (전세대 대비) · NPU 990 2× 성능 / +56% 전력효율 — <span class="unverified">양측 모두 벤더 자체 수치, 동일 조건 3자 실측 미확인</span></dd>
+          <dt>DX 시사점</dt><dd>공정 우위(2nm)를 확보했음에도 실사용 우위로 전환되지 않는 지점 — 컴파일러 최적화, 커널 커버리지, 메모리 플래닝, SDK 접근성 중 무엇인지 — 를 특정하는 내부 실측이 필요하다. 경쟁사가 "온디바이스 LLM 지원"을 스펙 항목으로 내세우는 국면에서 <strong>Exynos 측 대응 메시지(어떤 모델이 몇 tok/s로 도는지)가 공개 자료에 부재</strong>한 것도 별도 리스크.</dd>
+          <dt>근거</dt><dd>자사 핵심 경쟁 사안 +25 · 광범위 보도 +15 · 정량 수치 +10 · 트레이드 프레스 수준 출처로 신뢰도 할인</dd>
+          <dt>출처</dt><dd class="srcs"><a href="https://www.androidauthority.com/exynos-vs-snapdragon-galaxy-s26-benchmarks-3653459/">Android Authority · S26 벤치</a><a href="https://www.gizmochina.com/2026/05/26/dimensity-9500-vs-exynos-2600-spec-sheet-benchmarks-and-more/">Gizmochina · 스펙 비교</a></dd>
+        </dl>
+      </article>
+
+      <article class="issue" data-state="new" data-tags="new hot">
+        <div class="issue-head">
+          <div class="issue-title">
+            <span class="idx">04</span>
+            <h3>Google LiteRT-LM × Gemma 4 × ARM SME2 — 런타임이 SoC 명령어를 자동 선택하는 단계로</h3>
+          </div>
+          <div class="meter">
+            <span class="badge">New</span>
+            <span class="num">65<i>/100</i></span>
+            <span class="ticks"><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u></u><u></u><u></u></span>
+          </div>
+        </div>
+        <dl class="spec">
+          <dt>분류</dt><dd>런타임 / 컴파일러</dd>
+          <dt>주체</dt><dd>Google AI Edge · ARM</dd>
+          <dt>핵심</dt><dd>LiteRT-LM이 <strong>Gemma 4의 크로스플랫폼 모바일·엣지 양산 인프라</strong>로 자리잡았고, 더 중요한 변화는 최적화 자동화다. LiteRT는 런타임에 <strong>XNNPACK + ARM KleidiAI 경유로 ARM SME2를 자동 감지·활용</strong>하며 iGeMM/GeMM 같은 연산 집약 커널을 전용 하드웨어 경로로 보낸다. 개발자가 SoC별 커널을 손으로 고르는 시대가 끝나간다. AI Edge Gallery는 2026-06 Mac까지 확장.</dd>
+          <dt>실측</dt><dd>커널 선택 자동화의 절대 이득치는 <span class="unverified">미확인</span>. 확인된 것은 경로(XNNPACK→KleidiAI→SME2)의 존재.</dd>
+          <dt>DX 시사점</dt><dd>Exynos NPU가 이 자동 선택 경로의 <strong>1급 백엔드로 등재되어 있는지</strong>가 실질 관건이다. 등재되지 않으면 앱 개발자는 아무 작업 없이 ARM CPU 경로로 떨어지고 우리 NPU는 유휴 상태로 남는다. → LiteRT 백엔드 등록 상태 점검을 실무 액션으로 제안.</dd>
+          <dt>근거</dt><dd>Tier A 공식 +25 · 상용 SDK 즉시 적용 +15 · ARM 협업 +15 · 실측 미공개</dd>
+          <dt>출처</dt><dd class="srcs"><a href="https://developers.googleblog.com/blazing-fast-on-device-genai-with-litert-lm/">LiteRT-LM 발표</a><a href="https://developers.googleblog.com/accelerating-on-device-ai-a-look-at-arm-and-google-ai-edge-optimization/">Arm × AI Edge 최적화</a></dd>
+        </dl>
+      </article>
+
+      <article class="issue" data-state="new" data-tags="new hot">
+        <div class="issue-head">
+          <div class="issue-title">
+            <span class="idx">05</span>
+            <h3>ExecuTorch — 온디바이스 런타임의 사실상 표준 후보 (논문 공개, 2026-05)</h3>
+          </div>
+          <div class="meter">
+            <span class="badge">New</span>
+            <span class="num">64<i>/100</i></span>
+            <span class="ticks"><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u></u><u></u><u></u><u></u></span>
+          </div>
+        </div>
+        <dl class="spec">
+          <dt>분류</dt><dd>런타임</dd>
+          <dt>주체</dt><dd>Meta / PyTorch Edge</dd>
+          <dt>핵심</dt><dd>PyTorch 단일 경로로 온디바이스 배포를 통합하는 설계를 논문으로 정리해 공개. 2025-10 1.0 GA 이후 Meta 자사 앱 양산 서비스에 투입 중.</dd>
+          <dt>실측</dt><dd class="num-run">기본 런타임 풋프린트 50KB (MCU~플래그십 폰 공통) · 하드웨어 백엔드 12종 이상 (Apple, Qualcomm, Arm, MediaTek, Vulkan) · HuggingFace 인기 엣지 LLM 80% 이상 무수정 동작</dd>
+          <dt>DX 시사점</dt><dd>백엔드 목록에 Qualcomm·MediaTek이 있고 <strong>Exynos/ENN이 없다</strong>는 점이 핵심이다. 모델 공급 파이프라인(HF → ExecuTorch → 디바이스)에서 빠지면 외부 모델을 우리 칩에 올릴 때마다 별도 포팅 비용이 발생한다. → ExecuTorch 백엔드 기여를 전략 과제로 검토할 근거.</dd>
+          <dt>근거</dt><dd>Tier A +25 · 상용 툴체인 즉시 적용 +15 · 정량 실측 +10 · 생태계 파급</dd>
+          <dt>출처</dt><dd class="srcs"><a href="https://arxiv.org/abs/2605.08195">arXiv 2605.08195</a></dd>
+        </dl>
+      </article>
+
+      <article class="issue" data-state="new" data-tags="new hot">
+        <div class="issue-head">
+          <div class="issue-title">
+            <span class="idx">06</span>
+            <h3>Quant.npu — 학계 양자화와 NPU 하드웨어 제약의 간극을 메우는 완전 정적 양자화</h3>
+          </div>
+          <div class="meter">
+            <span class="badge">New</span>
+            <span class="num">62<i>/100</i></span>
+            <span class="ticks"><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u></u><u></u><u></u><u></u></span>
+          </div>
+        </div>
+        <dl class="spec">
+          <dt>분류</dt><dd>경량화 / 컴파일러 툴체인</dd>
+          <dt>주체</dt><dd>Jinghe Zhang, Daliang Xu, Chenghua Wang, Weikai Xie, Tao Qi, <strong>Yun Ma</strong>, <strong>Mengwei Xu</strong>, Gang Huang — BUPT·PKU 계열, ASPLOS'25 "Fast On-device LLM Inference with NPUs" 및 <code>mllm</code> 저장소와 동일 계보</dd>
+          <dt>핵심</dt><dd>문제 정의가 정확하다. SOTA PTQ(AWQ/GPTQ 계열)는 <strong>동적 활성 양자화</strong>를 전제하는데 모바일 NPU는 최적 효율을 위해 <strong>완전 정적 양자화</strong>를 요구한다 — 그래서 좋은 알고리즘이 NPU에서 안 돌았다. Quant.npu는 정수 전용 완전 정적 양자화에 학습 가능한 양자화 파라미터 + 회전 행렬(rotation), 회전·비트폭 인지 초기화, 분포 인지 선택적 최적화(2단 파이프라인), 민감도 기반 적응 혼합정밀을 결합.</dd>
+          <dt>실측</dt><dd class="num-run">실기 모바일 NPU에서 지연 <strong>최대 15.1% 감소</strong>, 정확도는 SOTA 대비 동등 — <span class="unverified">NPU 모델명·TTFT·메모리 수치는 초록 수준에서 미확인</span></dd>
+          <dt>DX 시사점</dt><dd><strong>ENN 툴체인 양자화 프론트엔드에 직접 이식 검토 대상.</strong> 우리 NPU도 정적 양자화 제약을 갖는 구조라면, 외부 공개 모델을 그대로 받아 정확도 손실 없이 정적화하는 능력이 곧 "모델 공급 속도"다. 회전 기반 접근(SpinQuant 계열)이 NPU 정적 제약과 결합되는 흐름을 팀 차원에서 추적할 것.</dd>
+          <dt>근거</dt><dd>온디바이스 NPU 분야 최상위 그룹 +20 · 실기 NPU 실측 +10 · 상용 툴체인 직접 적용 가능 +15 · 신규 프리프린트</dd>
+          <dt>출처</dt><dd class="srcs"><a href="https://arxiv.org/abs/2605.20295">arXiv 2605.20295</a></dd>
+        </dl>
+      </article>
+
+      <article class="issue" data-state="new" data-tags="new hot">
+        <div class="issue-head">
+          <div class="issue-title">
+            <span class="idx">07</span>
+            <h3>Colibri — 의존성 0 순수 C 엔진, 디스크 expert 스트리밍으로 744B MoE를 25GB RAM에서</h3>
+          </div>
+          <div class="meter">
+            <span class="badge">New</span>
+            <span class="num">61<i>/100</i></span>
+            <span class="ticks"><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u></u><u></u><u></u><u></u></span>
+          </div>
+        </div>
+        <dl class="spec">
+          <dt>분류</dt><dd>런타임 / 시스템 기법</dd>
+          <dt>주체</dt><dd>OSS — GitHub Trending, 2026-07</dd>
+          <dt>핵심</dt><dd>GLM-5.2(744B MoE)를 <strong>필요한 expert만 디스크에서 스트리밍</strong>해 소비자급 머신 RAM 약 25GB로 구동. 모델 전체를 메모리에 올린다는 전제를 깨는 접근으로, "LLM in a flash" 계열 기법이 대형 MoE와 순수 C 구현으로 실용화된 사례.</dd>
+          <dt>실측</dt><dd class="num-run">RAM 약 25GB로 744B MoE 구동 — <span class="unverified">처리량·TTFT·스토리지 I/O 부하 미확인</span></dd>
+          <dt>DX 시사점</dt><dd>기법의 방향이 우리 문제와 정확히 겹친다. 모바일·임베디드는 DRAM이 비싸고 <strong>NAND는 상대적으로 넉넉하다.</strong> "UFS에서 expert/레이어를 스트리밍해 DRAM 상주량을 줄이는" 설계는 Exynos + 자사 메모리 사업의 수직 통합 강점을 살릴 수 있는 드문 축이다. 단 NAND 수명·전력·지연 트레이드오프 실측이 선행 조건.</dd>
+          <dt>근거</dt><dd>커뮤니티 급부상 +20 · 시스템 기법 신규성 +15 · 자사 수직통합 적합성 +15 · 실측 미검증</dd>
+          <dt>출처</dt><dd class="srcs"><a href="https://aitoolradar.io/blog/open-source-ai-radar-july-2026">Open-Source AI Radar 2026-07</a></dd>
+        </dl>
+      </article>
+    </section>
+
+    <section id="watch">
+      <h2>주목 항목 <em>attention 40–59</em></h2>
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>항목</th><th>분류</th><th>주체</th><th>요약</th><th>주목도</th><th>출처</th></tr>
+          </thead>
+          <tbody>
+            <tr data-tags="new watch">
+              <td class="t">KV 캐시 압축 3종<br>VeriCache / QuantSpec / Forward-Influence</td>
+              <td>경량화</td>
+              <td>다수</td>
+              <td class="d">VeriCache는 <strong>full-KV와 출력 완전 동일</strong>을 보장하며 처리량 최대 4×. QuantSpec는 희소 KV 자기-스펙큘러티브로 수락률 &gt;90% · ~2.5×. Forward Influence는 압축 토큰이 미래 문맥에 주는 영향을 지표화.</td>
+              <td class="s">58</td>
+              <td><a href="https://huggingface.co/papers/2606.26875">HF 2606.26875</a></td>
+            </tr>
+            <tr data-tags="new watch">
+              <td class="t">TileFuse</td>
+              <td>컴파일러 / 커널</td>
+              <td>Wesley Pang, Deming Chen 외 (UIUC) · 2026-07-03 v2</td>
+              <td class="d">AMD <strong>XDNA2 NPU</strong>(Ryzen AI 7 350 / 9 HX 370)용 AWQ 기반 융합 혼합정밀 GEMM/GEMV 커널 라이브러리 — NPU 타일 버퍼에 맞춘 퓨전. 정량 결과는 원문 정독 필요(미확인).</td>
+              <td class="s">56</td>
+              <td><a href="https://arxiv.org/pdf/2606.11357">arXiv 2606.11357</a></td>
+            </tr>
+            <tr data-tags="new watch">
+              <td class="t">Atome LM</td>
+              <td>모델 / 임베디드</td>
+              <td>TilelliLab (OSS, 141★)</td>
+              <td class="d"><strong>$2 MCU급에서 도는 삼항 LM.</strong> 60K 파라미터 → 플래시 20KB, ESP32-WROOM-32 실기에서 ~1 tok/s 일관 생성. TinyStories ppl 6.31 vs 8.12(파라미터 동급 −22%, 플래시 예산 동급 −52%). Python↔C99↔Cortex-M3 비트 단위 동일성 검증. 단 944K 규모에서는 baseline에 역전.</td>
+              <td class="s">55</td>
+              <td><a href="https://github.com/TilelliLab/atome-lm">GitHub</a></td>
+            </tr>
+            <tr data-tags="new watch">
+              <td class="t">P3-LLM</td>
+              <td>하드웨어 / 수치형식</td>
+              <td>학계 · 2026-05</td>
+              <td class="d">엣지 LLM용 <strong>NPU–PIM 통합 가속기</strong> + 하이브리드 수치형식 기반 유연 혼합정밀. PIM 축을 자사 메모리 사업 관점에서 볼 가치.</td>
+              <td class="s">48</td>
+              <td><a href="https://arxiv.org/html/2511.06838v4">arXiv 2511.06838</a></td>
+            </tr>
+            <tr data-tags="new watch">
+              <td class="t">BitNet CPU 커널 최적화 · BitRL</td>
+              <td>경량화</td>
+              <td>Microsoft / 학계</td>
+              <td class="d">BitNet b1.58(ternary {−1,0,+1}) 병렬 커널로 2026-01 기준 원 구현 대비 1.15–2.1× 추가 가속. BitRL은 1비트 모델로 엣지 온디바이스 RL 학습·추론.</td>
+              <td class="s">45</td>
+              <td><a href="https://github.com/microsoft/BitNet">microsoft/BitNet</a> · <a href="https://arxiv.org/html/2604.24273">BitRL</a></td>
+            </tr>
+            <tr data-tags="new watch">
+              <td class="t">SpeContext (ASPLOS'26)</td>
+              <td>경량화</td>
+              <td>학계</td>
+              <td class="d">스펙큘러티브 문맥 희소성으로 롱컨텍스트 추론 효율화 — 온디바이스 롱컨텍스트의 KV 압박 완화 축.</td>
+              <td class="s">44</td>
+              <td><a href="https://www.asplos-conference.org/asplos2026/program/index.html">ASPLOS 2026</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="tool" data-narrative>
+      <h2>툴체인 · 릴리즈 노트 <em>⚡ = 즉시 적용 가능</em></h2>
+      <ul class="lines">
+        <li><span class="zap">⚡</span> <strong>LiteRT-LM</strong> — Gemma 4 양산 경로 확정. ARM SME2를 XNNPACK+KleidiAI 경유로 런타임 자동 감지. Android 타깃이면 지금 적용 가능.</li>
+        <li><span class="zap">⚡</span> <strong>ExecuTorch 1.0+</strong> — 백엔드 12종 이상, 기본 50KB. HF 엣지 LLM 80%+ 무수정 동작. <strong>Exynos/ENN 백엔드 부재.</strong></li>
+        <li><span class="zap">⚡</span> <strong>llama.cpp</strong> — CPU 추론 사실상 표준 유지, GGUF가 양자화 모델 유통 포맷으로 고착. Android LM Playground가 KleidiAI 커널 튜닝 적용.</li>
+        <li><strong>MLX (Apple)</strong> — Apple Silicon에서 표준 벤치 대비 30–50% 빠르다는 보고. Apple Intelligence Foundation Models 프레임워크는 iOS 26+ / iPhone 15 Pro 이상.</li>
+        <li><strong>BitNet.cpp</strong> — 2026-01 병렬 커널로 1.15–2.1× 추가 가속.</li>
+        <li><strong>Hugging Face (2026-07)</strong> — Mamba2 chunked-prefill 및 Zamba2/Nemotron-H/Bamba 스펙큘러티브 디코딩 수정 반영. <strong>하이브리드 SSM 계열의 배포 경로가 정비되는 신호.</strong></li>
+        <li><strong>프레임워크 비교</strong> — 2026-03-31 기준 ExecuTorch·LiteRT·llama.cpp·ONNX Runtime·CoreML 동일 조건 비교 연구 존재. 현재 정설은 <strong>"모바일 양산=ExecuTorch, 데스크톱/프로토타이핑=llama.cpp, Apple=MLX"</strong>. 비교 앱 소스: <a href="https://github.com/FilipFan/PolyEngineInfer">PolyEngineInfer</a></li>
+      </ul>
+    </section>
+
+    <section id="people" data-narrative>
+      <h2>워치리스트 연구자 동향</h2>
+      <ul class="lines">
+        <li><strong>Song Han (MIT HAN Lab)</strong> — ① <em>Four Over Six: More Accurate NVFP4 Quantization with Adaptive Block Scaling</em> 및 적응형 블록 스케일 데이터 타입(2026-04 갱신) → <strong>NVFP4/MXFP4 4비트 부동소수 포맷의 정확도 문제를 블록 스케일링으로 푸는 흐름.</strong> 차세대 NPU 수치형식 설계에 직결. ② ASPLOS'26 <em>Taming the Long-Tail: Efficient Reasoning RL Training with Adaptive Drafter</em>. 기존 라인(AWQ·SmoothQuant·StreamingLLM)은 NVIDIA TensorRT-LLM에 채택된 상태. <a href="https://github.com/mit-han-lab">github.com/mit-han-lab</a></li>
+        <li><strong>Vikas Chandra · Raghuraman Krishnamoorthi (Meta)</strong> — 위 핫이슈 [01] 정세 문서. 온디바이스 아젠다 세팅을 Meta가 주도하는 국면.</li>
+        <li><strong>Mengwei Xu · Daliang Xu (BUPT 계열)</strong> — Quant.npu(핫이슈 [06]). ASPLOS'25 <em>Fast On-device LLM Inference with NPUs</em>(PowerNPU) 및 <code>mllm</code>(모바일 멀티모달 LLM 엔진)과 연속된 계보. <strong>모바일 NPU 실기 최적화에서 현재 가장 일관된 산출을 내는 그룹</strong> — 지속 추적 권장.</li>
+        <li><strong>Deming Chen (UIUC)</strong> — TileFuse. AMD NPU 커널 축.</li>
+      </ul>
+    </section>
+
+    <section id="radar" data-narrative>
+      <h2>레이더 <em>낮은 점수, 전략적 신호</em></h2>
+      <ul class="lines">
+        <li><strong>모델 티어 이동</strong> — 커뮤니티(r/LocalLLaMA, 약 74.9만 멤버) 기본값이 24GB 티어에서 Qwen3.6-27B로, 멀티모달 대안은 Gemma 4 31B. 소형 모델 진화 속도가 하드웨어 세대 교체보다 빠르다 → <strong>칩 스펙을 특정 모델 크기에 맞춰 고정하는 설계는 위험.</strong></li>
+        <li><strong>Diffusion LLM</strong> — 병렬 토큰 정제로 4–6× 가속 가능성이 언급되기 시작. 자기회귀 전제의 NPU 데이터패스 설계에 중장기 변수.</li>
+        <li><strong>초저전력 티어의 실체화</strong> — 60K~600K 파라미터 삼항 모델이 ESP32에서 실제로 동작. 웨어러블·IoT·가전에서 "클라우드 없는 자연어 UI"의 하한선이 내려가는 중. Qualcomm도 Snapdragon Wear Elite에 온디바이스 NPU 탑재.</li>
+        <li><strong>NPU–PIM 수렴</strong> — P3-LLM처럼 NPU와 PIM을 한 칩에서 다루는 연구가 늘고 있다. 대역폭이 병목이라는 [01]의 결론과 정확히 맞물리며, <strong>메모리–로직 양쪽 자산을 가진 구조에서 가장 큰 레버리지 지점.</strong></li>
+        <li><strong>수집 소스 편입</strong> — <a href="https://github.com/jeho-lee/Awesome-On-Device-AI">Awesome-On-Device-AI-Systems</a> 큐레이션을 다음 회차 소스에 추가.</li>
+      </ul>
+    </section>
+
+    <section id="dedup" data-narrative>
+      <h2>중복 제거 규칙 <em>이번 회차 생략 0건</em></h2>
+      <div class="panel">
+        <h3>같은 내용을 두 번 보고하지 않는다 — 단, 판이 바뀌면 다시 올린다</h3>
+        첫 회차이므로 생략 항목이 없다. 위 13개 항목이 <code>seen-index.json</code>에 등재되며, 다음 회차부터
+        <strong>최근 5일 내 기보고 항목은 자동 억제</strong>된다. 억제된 항목은 리포트 하단에 제목만 남겨,
+        빠진 것이 아니라 이미 보고된 것임을 확인할 수 있게 한다.
+        <ul>
+          <li>다만 아래 <strong>급상승 조건</strong> 중 하나라도 충족하면 5일 이내라도 <code>🔥 급상승 재보고</code>로 다시 게재하고, 무엇이 달라졌는지 한 줄로 명시한다.</li>
+          <li>주목도가 이전 보고 대비 <strong>1.5배 이상 상승</strong>하고 현재 <strong>70점 이상</strong></li>
+          <li>GitHub 주간 스타 증가폭이 이전 대비 <strong>3배 이상</strong> 또는 주간 <strong>+2,000 이상</strong></li>
+          <li>Hacker News 프론트 상위 · r/LocalLLaMA 상위 · Hugging Face Trending <strong>신규 진입</strong></li>
+          <li>Tier A 기업의 <strong>상용 SDK/제품에 정식 채택</strong> (연구 → 제품 전이)</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="trust" data-narrative>
+      <h2>신뢰도 메모 <em>확인하지 못한 것을 명시한다</em></h2>
+      <div class="panel">
+        <ul>
+          <li><strong>미확인 수치</strong> — Quant.npu의 NPU 모델명·TTFT·메모리, TileFuse의 정량 결과, Colibri의 처리량·I/O 부하, LiteRT SME2 자동 선택의 절대 이득치. 초록/2차 출처 수준에서 멈췄으며 다음 회차 <code>--deep</code> 실행의 원문 정독 대상으로 큐잉했다.</li>
+          <li><strong>벤더 자체 수치</strong> — Exynos 2600 +113%, NPU 990 2×/+56%. 동일 조건 3자 실측이 아니다.</li>
+          <li><strong>2차 정보</strong> — Qualcomm 3D-DRAM NPU 로드맵(40 TOPS + 4GB)은 트레이드 프레스 경유로 공식 확인이 필요하다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="history" data-narrative>
+      <h2>회차 이력</h2>
+      <details open>
+        <summary><span>2026-07-31 · 회차 001 · 기준선</span><span class="hist-date">신규 13 / 급상승 0 / 생략 0</span></summary>
+        <div class="hist-body">
+          <ol>
+            <li>Meta "On-Device LLMs: State of the Union 2026" — 병목은 대역폭 <span class="hist-date">72</span></li>
+            <li>Qualcomm 80 TOPS 전 스택 + 3D-DRAM NPU 로드맵 <span class="hist-date">70</span></li>
+            <li>Exynos 2600 vs Dimensity 9500 경쟁 구도 <span class="hist-date">66</span></li>
+            <li>Google LiteRT-LM × Gemma 4 × ARM SME2 <span class="hist-date">65</span></li>
+            <li>ExecuTorch 통합 런타임 논문 <span class="hist-date">64</span></li>
+            <li>Quant.npu 완전 정적 양자화 <span class="hist-date">62</span></li>
+            <li>Colibri 디스크 expert 스트리밍 <span class="hist-date">61</span></li>
+          </ol>
+        </div>
+      </details>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>ondevice-llm-monitor · 회차 001</span>
+    <span>수집 소스 30+건 검토</span>
+    <span>신규 13 · 급상승 재보고 0 · 중복 생략 0</span>
+    <span>매일 아침 자동 갱신 · 수동 갱신 /ondevice-brief</span>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var chips     = [].slice.call(document.querySelectorAll('.chip[data-filter]'));
+  var items     = [].slice.call(document.querySelectorAll('[data-tags]'));
+  var narrative = [].slice.call(document.querySelectorAll('[data-narrative]'));
+  var itemSecs  = [].slice.call(document.querySelectorAll('#hot, #watch'));
+  var navLinks  = [].slice.call(document.querySelectorAll('.rail nav a'));
+  var bar       = document.getElementById('filter-bar');
+  var barText   = document.getElementById('filter-bar-text');
+  var resetBtn  = document.getElementById('filter-reset');
+  var empty     = document.getElementById('empty-state');
+  var emptyT    = document.getElementById('empty-title');
+  var emptyB    = document.getElementById('empty-body');
+  if (!chips.length || !bar) return;
+
+  var LABEL = {
+    'new':        '신규',
+    'resurgence': '급상승 재보고',
+    'suppressed': '중복 생략',
+    'hot':        '핫 이슈'
+  };
+
+  /* A zero-count filter is not a dead end - it is the answer to "왜 없는가".
+     That reasoning is the part an executive actually needs. */
+  var EMPTY = {
+    'new': ['이번 회차 신규 항목 없음',
+      '새로 잡힌 항목이 없습니다. 워치리스트 축은 정상 수집되었으나 보고 기준(주목도 40점)을 넘은 신규 항목이 없다는 뜻입니다.'],
+    'resurgence': ['급상승 재보고 항목 없음',
+      '최근 5일 내 이미 보고한 항목 중 급상승 조건을 충족한 것이 없습니다. 조건은 네 가지입니다 - 주목도가 이전 보고 대비 1.5배 이상 상승하고 현재 70점 이상, GitHub 주간 스타 증가폭이 이전 대비 3배 또는 주간 +2,000 이상, Hacker News 프론트·r/LocalLLaMA 상위·Hugging Face Trending 신규 진입, Tier A 기업의 상용 SDK·제품에 정식 채택. 즉 "조용한 날"이며, 놓친 것이 아닙니다.'],
+    'suppressed': ['중복으로 생략한 항목 없음',
+      '이번 회차는 첫 실행이라 비교할 이전 보고가 없습니다. 다음 회차부터는 최근 5일 내 이미 보고한 항목이 여기에 제목만 모여, 빠진 것이 아니라 이미 보신 것임을 확인할 수 있습니다.'],
+    'hot': ['핫 이슈 없음', '주목도 60점 이상 항목이 없습니다.']
+  };
+
+  function has(el, tag) {
+    return (' ' + (el.getAttribute('data-tags') || '') + ' ').indexOf(' ' + tag + ' ') > -1;
+  }
+  function countOf(tag) {
+    var n = 0;
+    items.forEach(function (el) { if (has(el, tag)) n++; });
+    return n;
+  }
+
+  /* Counts are derived from the content itself, never hand-written, so a badge
+     can never disagree with the brief it summarises. */
+  chips.forEach(function (c) {
+    var b = c.querySelector('b');
+    if (b) b.textContent = countOf(c.getAttribute('data-filter'));
+  });
+
+  var active = null;
+
+  function render() {
+    items.forEach(function (el) {
+      el.classList.toggle('is-hidden', !!active && !has(el, active));
+    });
+    narrative.forEach(function (el) { el.classList.toggle('is-hidden', !!active); });
+
+    var shown = 0;
+    itemSecs.forEach(function (sec) {
+      var vis = [].slice.call(sec.querySelectorAll('[data-tags]')).filter(function (el) {
+        return !el.classList.contains('is-hidden');
+      }).length;
+      shown += vis;
+      sec.classList.toggle('is-hidden', !!active && vis === 0);
+    });
+
+    chips.forEach(function (c) {
+      c.setAttribute('aria-pressed', c.getAttribute('data-filter') === active ? 'true' : 'false');
+    });
+
+    bar.classList.toggle('is-on', !!active);
+    if (active) {
+      barText.textContent = '';
+      barText.appendChild(document.createTextNode(LABEL[active] + ' 필터 적용 중 · '));
+      var strong = document.createElement('b');
+      strong.textContent = String(shown);
+      barText.appendChild(strong);
+      barText.appendChild(document.createTextNode('건 표시'));
+    }
+
+    var showEmpty = !!active && shown === 0;
+    empty.classList.toggle('is-on', showEmpty);
+    if (showEmpty) {
+      var msg = EMPTY[active] || ['표시할 항목이 없습니다', ''];
+      emptyT.textContent = msg[0];
+      emptyB.textContent = msg[1];
+    }
+
+    /* A link to a hidden section would silently do nothing, so dim it. */
+    navLinks.forEach(function (a) {
+      var href = a.getAttribute('href') || '';
+      var target = href.charAt(0) === '#' ? document.getElementById(href.slice(1)) : null;
+      var off = !!target && target.classList.contains('is-hidden');
+      a.classList.toggle('is-dim', off);
+      if (off) { a.setAttribute('aria-disabled', 'true'); }
+      else { a.removeAttribute('aria-disabled'); }
+    });
+  }
+
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      var f = c.getAttribute('data-filter');
+      active = (active === f) ? null : f;   // pressing the active chip clears it
+      render();
+    });
+  });
+
+  resetBtn.addEventListener('click', function () {
+    active = null;
+    render();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && active) { active = null; render(); }
+  });
+
+  render();
+})();
+</script>

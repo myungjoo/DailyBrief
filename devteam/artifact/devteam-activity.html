@@ -1,0 +1,1182 @@
+<title>개발 활동 브리핑</title>
+
+<style>
+/* ============================================================
+   TOKENS  - blue-biased cool neutrals + single sequential blue
+   ramp (dataviz reference palette) + one status colour.
+   Only two chromatic marks are ever adjacent: accent blue and
+   attention amber. Validated all-pairs, both modes.
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --plane:      #f7f8f9;
+  --surface:    #fbfbfc;
+  --surface-2:  #f2f4f7;
+  --ink:        #10131a;
+  --ink-2:      #4b5462;
+  --ink-3:      #7d8794;
+  --rule:       #e2e5ea;
+  --rule-2:     #cfd5dd;
+  --border:     rgba(16,19,26,0.11);
+  --accent:     #2a78d6;
+  --accent-ink: #1c5cab;
+  --accent-wash:#eaf2fd;
+  --attn:       #fab219;
+  --attn-ink:   #c07800;
+  --attn-wash:  #fdf4de;
+  --blind:      #98a2b0;   /* "unobserved" - achromatic on purpose */
+  /* sequential ramp: near-zero recedes toward the surface */
+  --s0: #f0f2f5;
+  --s1: #cde2fb;
+  --s2: #9ec5f4;
+  --s3: #5598e7;
+  --s4: #2a78d6;
+  --s5: #184f95;
+  --shadow: 0 1px 2px rgba(16,19,26,0.05), 0 8px 24px -16px rgba(16,19,26,0.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --plane:      #0c0e11;
+    --surface:    #15171a;
+    --surface-2:  #1c1f24;
+    --ink:        #ffffff;
+    --ink-2:      #b9c0ca;
+    --ink-3:      #868f9b;
+    --rule:       #262a30;
+    --rule-2:     #343a42;
+    --border:     rgba(255,255,255,0.11);
+    --accent:     #3987e5;
+    --accent-ink: #86b6ef;
+    --accent-wash:rgba(57,135,229,0.13);
+    --attn:       #fab219;
+    --attn-ink:   #fab219;
+    --attn-wash:  rgba(250,178,25,0.12);
+    --blind:      #6d7682;
+    --s0: #1e2126;
+    --s1: #0d366b;
+    --s2: #184f95;
+    --s3: #256abf;
+    --s4: #3987e5;
+    --s5: #86b6ef;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 30px -18px rgba(0,0,0,0.8);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane:      #0c0e11;
+  --surface:    #15171a;
+  --surface-2:  #1c1f24;
+  --ink:        #ffffff;
+  --ink-2:      #b9c0ca;
+  --ink-3:      #868f9b;
+  --rule:       #262a30;
+  --rule-2:     #343a42;
+  --border:     rgba(255,255,255,0.11);
+  --accent:     #3987e5;
+  --accent-ink: #86b6ef;
+  --accent-wash:rgba(57,135,229,0.13);
+  --attn:       #fab219;
+  --attn-ink:   #fab219;
+  --attn-wash:  rgba(250,178,25,0.12);
+  --blind:      #6d7682;
+  --s0: #1e2126;
+  --s1: #0d366b;
+  --s2: #184f95;
+  --s3: #256abf;
+  --s4: #3987e5;
+  --s5: #86b6ef;
+  --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 10px 30px -18px rgba(0,0,0,0.8);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --plane:      #f7f8f9;
+  --surface:    #fbfbfc;
+  --surface-2:  #f2f4f7;
+  --ink:        #10131a;
+  --ink-2:      #4b5462;
+  --ink-3:      #7d8794;
+  --rule:       #e2e5ea;
+  --rule-2:     #cfd5dd;
+  --border:     rgba(16,19,26,0.11);
+  --accent:     #2a78d6;
+  --accent-ink: #1c5cab;
+  --accent-wash:#eaf2fd;
+  --attn:       #fab219;
+  --attn-ink:   #c07800;
+  --attn-wash:  #fdf4de;
+  --blind:      #98a2b0;
+  --s0: #f0f2f5;
+  --s1: #cde2fb;
+  --s2: #9ec5f4;
+  --s3: #5598e7;
+  --s4: #2a78d6;
+  --s5: #184f95;
+}
+
+/* ---------- type roles ---------- */
+:root {
+  --sans: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "Consolas", "D2Coding", monospace;
+}
+
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px 72px; }
+
+/* ============ masthead ============ */
+.masthead { padding: 40px 0 0; }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 14px;
+}
+h1 {
+  font-size: clamp(28px, 5.2vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -0.028em;
+  font-weight: 800;
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+.h1-sub {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin: 0 0 22px;
+  letter-spacing: 0.01em;
+}
+
+/* ============ chips / filter bar ============ */
+.chipbar {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--plane) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+  padding: 12px 0 11px;
+  margin-bottom: 26px;
+}
+.chiprow { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.chip {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  padding: 5px 11px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.chip:hover { border-color: var(--rule-2); color: var(--ink); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chip .n {
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin-left: 5px;
+}
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--plane);
+}
+.chip[aria-pressed="true"] .n { color: var(--plane); }
+.chip.zero { opacity: 0.62; }
+.chip.static {
+  cursor: default;
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-3);
+  padding-left: 0;
+}
+.chip.clear { border-style: dashed; }
+.chip.clear[hidden] { display: none; }
+
+/* ============ generic section ============ */
+section { margin: 0 0 34px; }
+.sechead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; }
+h2 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0;
+  font-family: var(--mono);
+}
+.sechead .note { font-size: 12.5px; color: var(--ink-3); margin: 0; }
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  padding: 20px 22px;
+}
+
+/* ============ banner (data limits) ============ */
+.banner {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--attn);
+  background: var(--attn-wash);
+  border-radius: 5px;
+  padding: 15px 18px 15px 17px;
+  margin: 0 0 26px;
+}
+.banner-h {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--attn-ink);
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.banner p { margin: 0 0 7px; font-size: 13.5px; color: var(--ink-2); }
+.banner p:last-child { margin-bottom: 0; }
+.banner strong { color: var(--ink); }
+
+/* ============ lede ============ */
+.lede {
+  font-size: clamp(17px, 2.4vw, 21px);
+  line-height: 1.5;
+  letter-spacing: -0.012em;
+  margin: 0;
+  text-wrap: pretty;
+}
+.lede em { font-style: normal; color: var(--accent-ink); font-weight: 700; }
+
+/* ---------- prose list: NEVER grid/flex on the li ---------- */
+ul.marked, ol.marked { list-style: none; margin: 0; padding: 0; }
+ul.marked > li, ol.marked > li {
+  position: relative;
+  padding-left: 26px;
+  margin: 0 0 11px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+ul.marked > li:last-child, ol.marked > li:last-child { margin-bottom: 0; }
+ul.marked > li::before {
+  content: "";
+  position: absolute;
+  left: 6px; top: 10px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--rule-2);
+}
+ol.marked { counter-reset: m; }
+ol.marked > li { counter-increment: m; }
+ol.marked > li::before {
+  content: counter(m);
+  position: absolute;
+  left: 0; top: 1px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+  width: 18px;
+  text-align: left;
+}
+ul.marked > li strong, ol.marked > li strong { color: var(--ink); font-weight: 650; }
+
+/* ============ stat tiles ============ */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.tile { background: var(--surface); padding: 15px 16px 14px; }
+.tile .k {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: block;
+  margin-bottom: 5px;
+}
+.tile .v { font-size: 26px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.1; }
+.tile .u { font-size: 12px; color: var(--ink-3); font-weight: 500; margin-left: 3px; }
+.tile .d { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); margin-top: 4px; }
+.tile.attn .v { color: var(--attn-ink); }
+.tile.blind .v { color: var(--blind); }
+
+/* ============ stalled ============ */
+.stall-list { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.stall {
+  background: var(--surface);
+  border-left: 3px solid var(--attn);
+  padding: 13px 16px;
+}
+.stall-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.stall-t { font-weight: 650; font-size: 14px; color: var(--ink); }
+.stall-days {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--attn-ink);
+  background: var(--attn-wash);
+  border: 1px solid color-mix(in srgb, var(--attn) 40%, transparent);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.stall-meta { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+.stall-why { font-size: 13px; color: var(--ink-2); margin: 4px 0 0; }
+
+/* ============ person cards ============ */
+.cards { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card.dim { border-left: 3px solid var(--blind); }
+.card-h { padding: 16px 18px 13px; border-bottom: 1px solid var(--rule); }
+.card-name { font-size: 18px; font-weight: 750; letter-spacing: -0.018em; margin: 0; }
+.card-id { font-family: var(--mono); font-size: 12px; color: var(--accent-ink); }
+.card-role { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 3px; letter-spacing: 0.02em; }
+.flags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+.flag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  background: var(--surface-2);
+  white-space: nowrap;
+}
+.flag.on { color: var(--attn-ink); background: var(--attn-wash); border-color: color-mix(in srgb, var(--attn) 40%, transparent); font-weight: 700; }
+.flag.blind { color: var(--blind); }
+.card-b { padding: 15px 18px 17px; }
+.sub {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 9px;
+}
+.sub + .sub-gap { margin-top: 16px; }
+.state {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.state.run { color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 35%, transparent); background: var(--accent-wash); }
+.state.done { color: var(--ink-2); }
+.state.stall { color: var(--attn-ink); background: var(--attn-wash); border-color: color-mix(in srgb, var(--attn) 40%, transparent); font-weight: 700; }
+
+/* metric strip: 1:1 children only */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 14px 0 0;
+}
+.m { background: var(--surface-2); padding: 9px 10px; }
+.m .k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); display: block; }
+.m .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.m .t { font-family: var(--mono); font-size: 10px; color: var(--ink-3); }
+.m.zero .v { color: var(--blind); }
+
+/* label/value rows - label column max-content + nowrap */
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 12px; margin: 14px 0 0; }
+.kv dt { font-family: var(--mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; letter-spacing: 0.03em; }
+.kv dd { margin: 0; font-size: 12.5px; color: var(--ink-2); min-width: 0; }
+.kv dd .repo { font-family: var(--mono); font-size: 11.5px; }
+.kv dd .num { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
+.read { font-size: 13.5px; color: var(--ink-2); margin: 14px 0 0; padding-top: 13px; border-top: 1px solid var(--rule); }
+.read strong { color: var(--ink); }
+
+/* ============ heatmap ============ */
+.scrollx { overflow-x: auto; padding-bottom: 4px; }
+.hm { min-width: 660px; }
+.hm-row { display: grid; grid-template-columns: 116px repeat(31, minmax(13px, 1fr)) 58px; gap: 2px; align-items: center; margin-bottom: 2px; }
+.hm-lab { font-family: var(--mono); font-size: 11px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 6px; }
+.hm-sum { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; text-align: right; }
+.hm-d { font-family: var(--mono); font-size: 9px; color: var(--ink-3); text-align: center; font-variant-numeric: tabular-nums; }
+.hm-d.we { color: var(--attn-ink); font-weight: 700; }
+.cell { height: 20px; border-radius: 2px; background: var(--s0); cursor: default; }
+.cell.we { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--attn) 45%, transparent); }
+.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
+.legend { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 12px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+.legend .sw { width: 15px; height: 12px; border-radius: 2px; display: inline-block; }
+
+/* ============ review matrix ============ */
+.mx { min-width: 520px; }
+.mx-row { display: grid; grid-template-columns: 128px repeat(4, minmax(58px, 1fr)) 74px; gap: 2px; align-items: stretch; margin-bottom: 2px; }
+.mx-h { font-family: var(--mono); font-size: 10px; color: var(--ink-3); text-align: center; align-self: end; padding-bottom: 4px; line-height: 1.25; word-break: break-all; }
+.mx-lab { font-family: var(--mono); font-size: 11px; color: var(--ink-2); display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mx-c {
+  height: 34px;
+  border-radius: 2px;
+  background: var(--s0);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums;
+  color: var(--blind);
+}
+.mx-c.self { background: repeating-linear-gradient(135deg, transparent 0 4px, var(--rule) 4px 5px); border-color: transparent; }
+.mx-tot { font-family: var(--mono); font-size: 11px; color: var(--blind); display: flex; align-items: center; justify-content: flex-end; font-variant-numeric: tabular-nums; }
+
+/* ============ bars ============ */
+.bars { display: grid; gap: 7px; }
+.bar-row { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 10px; align-items: center; }
+.bar-lab { font-family: var(--mono); font-size: 11px; color: var(--ink-2); white-space: nowrap; }
+.bar-track { height: 12px; background: var(--surface-2); border-radius: 2px; min-width: 0; position: relative; }
+.bar-fill { height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; }
+.bar-v { font-family: var(--mono); font-size: 11px; color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 700; }
+
+/* ============ history accordion ============ */
+details.hist { border: 1px solid var(--border); border-radius: 6px; background: var(--surface); overflow: hidden; }
+details.hist > summary {
+  cursor: pointer;
+  padding: 13px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  list-style: none;
+}
+details.hist > summary::-webkit-details-marker { display: none; }
+details.hist > summary::before { content: "+ "; color: var(--ink-3); font-weight: 700; }
+details.hist[open] > summary::before { content: "- "; }
+details.hist > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hist-b { padding: 4px 18px 18px; border-top: 1px solid var(--rule); }
+
+/* ============ tables ============ */
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+th { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+tr:last-child td { border-bottom: none; }
+
+/* ============ zero-state / filter explainer ============ */
+.zstate { display: none; }
+.zstate.on { display: block; }
+.zstate .panel { border-left: 3px solid var(--accent); }
+.zstate h3 { font-size: 15px; margin: 0 0 7px; letter-spacing: -0.01em; }
+.zstate p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+
+.caution .panel { border-left: 3px solid var(--ink-3); }
+.foot { font-family: var(--mono); font-size: 11px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; margin-top: 34px; }
+.foot p { margin: 0 0 4px; }
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+@media (min-width: 900px) {
+  .cards { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 520px) {
+  .wrap { padding: 0 14px 56px; }
+  .kv { grid-template-columns: 1fr; gap: 0 0; }
+  .kv dt { margin-top: 7px; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">DX &middot; AI Center &middot; 개발 조직 가시성 &middot; 기준선 회차</p>
+    <h1>개발 활동 브리핑</h1>
+    <p class="h1-sub">2026-07-01 ~ 2026-07-31 &nbsp;|&nbsp; github.com &nbsp;|&nbsp; 대상 4명 &nbsp;|&nbsp; 회차 라벨 2026-07(30d)</p>
+  </header>
+
+  <div class="chipbar">
+    <div class="chiprow" id="chiprow">
+      <span class="chip static">기간 2026-07 (30일)</span>
+      <span class="chip static">대상 4명</span>
+      <button class="chip" type="button" data-filter="stalled" aria-pressed="false">정체<span class="n" data-count="stalled">0</span></button>
+      <button class="chip" type="button" data-filter="overload" aria-pressed="false">과부하 점검<span class="n" data-count="overload">0</span></button>
+      <button class="chip" type="button" data-filter="dropped" aria-pressed="false">활동 급감<span class="n" data-count="dropped">0</span></button>
+      <button class="chip" type="button" data-filter="noreview" aria-pressed="false">리뷰 0건<span class="n" data-count="noreview">0</span></button>
+      <button class="chip" type="button" data-filter="idcheck" aria-pressed="false">ID 확인 필요<span class="n" data-count="idcheck">0</span></button>
+      <button class="chip clear" type="button" id="clearBtn" hidden>전체 보기 (Esc)</button>
+    </div>
+  </div>
+
+  <!-- ================= DATA LIMITS BANNER ================= -->
+  <div class="banner" data-narrative>
+    <p class="banner-h">데이터 한계 &mdash; 이 화면을 읽기 전에</p>
+    <p><strong>비공개 기여 4건은 조회 불가</strong>이며, 그 4건은 전량 조회 계정 본인(<code>myungjoo</code>)의 것이다.
+       나머지 3명은 <code>restricted = 0</code>으로 보고됐으나 이는 <strong>"없음"이 아니라 "보이지 않음"일 수 있다</strong>
+       &mdash; 실제 0건인지, 프로필에서 비공개 기여 표시를 끈 결과인지 이 데이터로는 구분되지 않는다.</p>
+    <p><strong>조회 토큰이 로스터 대상 중 한 명의 계정이다.</strong> 그 한 명만 비공개 레포 기여가 집계에 들어오므로,
+       본인 수치만 크게 보이는 착시가 구조적으로 존재한다. <strong>4명을 같은 축에서 비교하면 안 된다.</strong></p>
+    <p><strong>사내 GitHub Enterprise는 조회 대상이 아니다.</strong> 여기 보이는 것은 각자의 공개 오픈소스 활동뿐이며,
+       사내 전용 코드 작업은 한 줄도 반영되지 않았다. 기본 브랜치 커밋만 집계되므로 피처 브랜치 작업도 PR로만 나타난다.</p>
+    <p><strong>역할 정보 미기입 4명(전원)</strong> &mdash; 로스터의 팀/역할/담당 영역이 모두 공백이라
+       담당 영역과 실제 작업의 정렬 점검과 역할별 해석 보정을 <strong>전원 건너뛰었다.</strong>
+       Staff/Maintainer의 낮은 커밋 수는 정상인데, 역할을 모르면 "활동 저조"로 오독된다.</p>
+    <p><strong>첫 실행(기준선 수집 회차)</strong> &mdash; 전월 스냅샷이 없어 추이는 제시하지 않는다. 다음 달부터 제공.</p>
+  </div>
+
+  <!-- ================= LEDE ================= -->
+  <section data-narrative>
+    <div class="panel">
+      <p class="lede">부서원 4명 중 <em>2명</em>이 github.com 공개 활동의 전량(커밋 1,369건 &middot; 머지 521건)을 만들고 있고
+      나머지 2명은 7월 공개 활동이 사실상 0인데, 이는 활동 유무의 문제가 아니라 <em>작업 무대가 조회 범위 밖에 있다는 관측 공백</em>이며,
+      동시에 팀 전체 <em>코드 리뷰가 4명 모두 0건</em>이라 개인 산출이 상호 검증 없이 진행되고 있다.</p>
+    </div>
+  </section>
+
+  <!-- ================= EXEC SUMMARY ================= -->
+  <section data-narrative>
+    <div class="sechead"><h2>임원 요약</h2></div>
+    <div class="panel">
+      <ul class="marked">
+        <li><strong>팀 공개 산출은 두 사람에 집중.</strong> 커밋 1,369건 중 <code>myungjoo</code> 794건(58%) &middot;
+            <code>leemgs</code> 575건(42%), 머지 PR 521건 중 496건이 <code>myungjoo</code>. 단 이 편중의 상당 부분은
+            조회 계정 비대칭과 Enterprise 미포함에서 오는 <strong>관측 편향</strong>이며 작업량 차이로 곧바로 읽을 수 없다.</li>
+        <li><strong><code>again4you</code> &middot; <code>jaeyun-jung</code>의 7월 공개 활동은 각각 1건 &middot; 0건.</strong>
+            기간 외 참고로 2026년 상반기 공개 활동도 각각 20건 &middot; 62건뿐이고 전량이 <code>nnstreamer</code> 계열이다.
+            즉 <strong>github.com이 주 작업 무대가 아니다.</strong> "활동 없음"이 아니라 관측 불가로 읽어야 한다.</li>
+        <li><strong>팀 전체 리뷰 제출 0건 &middot; 리뷰 범위 0명.</strong> 관측된 PR 521건 중 리뷰가 붙은 것이 0건,
+            사이클 타임 중앙값이 6분 &middot; 0.2분이다. 속도가 빠른 것이 아니라 <strong>전량 self-merge</strong>,
+            즉 상호 검증 절차가 공개 범위에 존재하지 않는다는 뜻이다.</li>
+        <li><strong>즉시 풀 수 있는 병목 5건.</strong> <code>aigovsensing/dataset-review</code>의 데이터셋 검토 이슈 5건이
+            자동 검토 결과 게시 후 14~16일간 종결 처리 없이 멈춰 있다. 판정 주체 대기가 유력하다.</li>
+        <li><strong>[행동 함의]</strong> 이번 회차 지표로 개인을 판단하는 것은 불가능하다. 다음 회차의 판단 가치를 만들려면
+            <strong>① 로스터 역할 정보 기입(4명 전원 공백)</strong>, <strong>② 사내 Enterprise 조회 경로 확보</strong>,
+            <strong>③ 검토 이슈 5건의 판정 주체 확인</strong>이 선행돼야 한다. ①②가 없으면 이 브리핑은
+            매달 같은 관측 공백을 반복한다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= TEAM TOTALS ================= -->
+  <section data-narrative>
+    <div class="sechead">
+      <h2>팀 전체 현황</h2>
+      <p class="note">기준선 수집 회차 &mdash; 전월 대비 추이는 2026-08 회차부터</p>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="k">커밋</span><span class="v">1,369</span><div class="d">기준선 &middot; 비교 없음</div></div>
+      <div class="tile"><span class="k">PR 생성</span><span class="v">522</span><div class="d">기준선</div></div>
+      <div class="tile"><span class="k">PR 머지</span><span class="v">521</span><div class="d">머지율 99.8%</div></div>
+      <div class="tile zero"><span class="k">리뷰 제출</span><span class="v" style="color:var(--attn-ink)">0</span><div class="d">리뷰 게이트 부재</div></div>
+      <div class="tile"><span class="k">사이클 타임 중앙</span><span class="v">0.1<span class="u">시간</span></span><div class="d">약 6분 &middot; self-merge</div></div>
+      <div class="tile blind"><span class="k">비공개 기여</span><span class="v">4</span><div class="d">조회 불가 &middot; 하한선</div></div>
+      <div class="tile"><span class="k">활동 인원</span><span class="v">3<span class="u">/ 4명</span></span><div class="d">기여 흔적 1건 이상</div></div>
+      <div class="tile"><span class="k">이슈 기여</span><span class="v">6</span><div class="d">전량 검토/셋업 이슈</div></div>
+    </div>
+    <p class="read" style="border-top:none;padding-top:11px">머지율 99.8%와 사이클 타임 6분은 <strong>프로세스가 빠르다는 신호가 아니라 리뷰 게이트가 없다는 신호</strong>다. 개인 속도 지표로 읽지 말 것.</p>
+  </section>
+
+  <!-- ================= ZERO-STATE PANELS ================= -->
+  <div class="zstate" id="z-stalled">
+    <div class="panel"><h3>정체 항목 5건 &mdash; 모두 같은 워크플로에서 멈췄다</h3>
+    <p>14일 이상 무진전 기준(로스터 &sect;4). 5건이 모두 같은 레포 &middot; 같은 검토 흐름이므로 개인의 지연이 아니라
+       <strong>검토 종결 단계가 병목</strong>이다. 확인할 것은 "누가 늦었나"가 아니라 <strong>판정 권한이 누구에게 있는가</strong>다.</p></div>
+  </div>
+  <div class="zstate" id="z-overload">
+    <div class="panel"><h3>과부하 점검 1명 &mdash; 주말 활동 비중 30% 초과</h3>
+    <p>판정 기준은 주말(토&middot;일) 기여가 전체 기여의 30%를 넘는 경우다(로스터 &sect;4).
+       <strong>이 표시는 성실성의 근거가 아니라 지속 가능성 점검 신호로만 쓴다.</strong>
+       주말 활동을 미덕으로 집계하지 않으며, 연속 활동일수도 지표로 쓰지 않는다.</p></div>
+  </div>
+  <div class="zstate" id="z-dropped">
+    <div class="panel"><h3>활동 급감 0명 &mdash; 판정 자체를 하지 않았다</h3>
+    <p>급감 판정 기준은 전월 대비 50% 이상 감소인데, <strong>이번이 첫 실행(기준선 수집 회차)이라 비교 대상이 존재하지 않는다.</strong>
+       없는 비교를 만들지 않기 위해 판정을 보류했다. <code>again4you</code>&middot;<code>jaeyun-jung</code>의 7월 0건도
+       급감으로 세지 않았다 &mdash; 두 사람의 공개 활동은 원래 저volume이며, 감소가 아니라 관측 범위 문제로 설명되는 쪽이 더 그럴듯하다.
+       실제 판정은 2026-08 회차부터 가능하다.</p></div>
+  </div>
+  <div class="zstate" id="z-noreview">
+    <div class="panel"><h3>리뷰 0건 4명 &mdash; 리뷰 네트워크가 비어 있다</h3>
+    <p>리뷰는 보이지 않는 노동이고 팀 기여도의 핵심 지표다. 그런데 조회 범위 안에서 리뷰를 준 사람도 받은 사람도 없다.
+       ① 실제로 상호 리뷰 없이 self-merge 중이거나(사일로), ② 상호 리뷰가 사내/비공개 레포에서 이뤄지고 있어 안 보이는 것이다.
+       <strong>이 데이터로는 구분되지 않는다.</strong></p></div>
+  </div>
+  <div class="zstate" id="z-idcheck">
+    <div class="panel"><h3>ID 확인 필요 0건 &mdash; 로스터 4개 ID 전부 유효</h3>
+    <p>4개 ID 모두 API 조회 성공(<code>NOT_FOUND</code> 없음)이므로 오기입이 없다.
+       <code>jaeyun-jung</code>은 GitHub 프로필에 실명이 공개돼 있지 않아 표시 이름을 <code>(미공개)</code>로 기입했으나,
+       <strong>계정 자체는 유효하다.</strong> 이름 미공개와 ID 오기입은 다른 문제다.</p></div>
+  </div>
+
+  <!-- ================= STALLED ================= -->
+  <section id="sec-stall">
+    <div class="sechead">
+      <h2>정체 항목 &middot; 14일 이상 무진전</h2>
+      <p class="note">임원이 즉시 풀 수 있는 병목. 이 화면에서 가장 먼저 볼 항목이다</p>
+    </div>
+    <div class="stall-list">
+      <div class="stall taggable" data-tags="stalled" data-primary>
+        <div class="stall-top"><span class="stall-t">[검토] AW_FB</span><span class="stall-days">16일 무진전</span><span class="stall-meta">leemgs &middot; aigovsensing/dataset-review &middot; 07-15 이후</span></div>
+        <p class="stall-why">자동 검토 결과 게시 후 종결 처리 없음. 추정 원인: 판정 주체 대기.</p>
+      </div>
+      <div class="stall taggable" data-tags="stalled" data-primary>
+        <div class="stall-top"><span class="stall-t">[검토] GSM8K</span><span class="stall-days">16일 무진전</span><span class="stall-meta">leemgs &middot; aigovsensing/dataset-review &middot; 07-15 이후</span></div>
+        <p class="stall-why">자동 검토 결과 게시 후 종결 처리 없음. 추정 원인: 판정 주체 대기.</p>
+      </div>
+      <div class="stall taggable" data-tags="stalled" data-primary>
+        <div class="stall-top"><span class="stall-t">[검토] GLOBEM</span><span class="stall-days">15일 무진전</span><span class="stall-meta">leemgs &middot; aigovsensing/dataset-review &middot; 07-16 이후</span></div>
+        <p class="stall-why">자동 검토 결과 게시 후 종결 처리 없음. 추정 원인: 판정 주체 대기.</p>
+      </div>
+      <div class="stall taggable" data-tags="stalled" data-primary>
+        <div class="stall-top"><span class="stall-t">[검토] TOFU (Task of Fictitious Unlearning)</span><span class="stall-days">15일 무진전</span><span class="stall-meta">leemgs &middot; aigovsensing/dataset-review &middot; 07-16 이후</span></div>
+        <p class="stall-why">자동 검토 결과 게시 후 종결 처리 없음. 추정 원인: 판정 주체 대기.</p>
+      </div>
+      <div class="stall taggable" data-tags="stalled" data-primary>
+        <div class="stall-top"><span class="stall-t">[검토] LifeSnaps</span><span class="stall-days">14일 무진전</span><span class="stall-meta">leemgs &middot; aigovsensing/dataset-review &middot; 07-17 이후</span></div>
+        <p class="stall-why">댓글 19건까지 논의가 진행된 뒤 정지. 추정 원인: 논의 결론 미도달.</p>
+      </div>
+    </div>
+    <p class="read">5건 모두 같은 레포 &middot; 같은 워크플로다. 즉 <strong>개인의 지연이 아니라 검토 종결 단계가 병목</strong>이다.
+      권한 소재가 불명확하면 앞으로 들어오는 모든 검토가 같은 지점에서 멈춘다.
+      <br>관찰(기준 미달): <code>myungjoo/Assessment-Agent</code>의 <code>[owner-action] PAT + Ollama LAN 셋업(Q-0053)</code> 이슈는
+      07-22 이후 <strong>9일</strong> 무진전으로 14일 기준에 못 미쳐 정체로 판정하지 않았다. 로컬 LLM 연동의 선행 조건이므로 다음 회차 재확인 대상.</p>
+  </section>
+
+  <!-- ================= PERSON CARDS ================= -->
+  <section id="sec-cards">
+    <div class="sechead">
+      <h2>인원별 현황</h2>
+      <p class="note">기본 정렬은 로스터 순서. 단일 점수 순위는 만들지 않는다</p>
+    </div>
+    <div class="cards">
+
+      <!-- myungjoo -->
+      <article class="card taggable" data-tags="overload noreview" data-primary>
+        <div class="card-h">
+          <p class="card-name">MyungJoo Ham <span class="card-id">myungjoo</span></p>
+          <div class="card-role">팀 (미기입) &middot; 담당 (미기입) &middot; 역할 정보 미기입 &mdash; 역할 맥락 없이 제시됨</div>
+          <div class="flags">
+            <span class="flag on">과부하 점검 &middot; 주말 30.0%</span>
+            <span class="flag on">리뷰 0건</span>
+            <span class="flag">조회 토큰 본인 계정</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <p class="sub">지금 하는 일 &middot; 근거: 단일 레포 PR 497건 제목 분류</p>
+          <ol class="marked">
+            <li><strong>기여 기반 평가 에이전트의 실데이터 수집 경로를 순수 컴포저로 분리하고 호출 정합성을 테스트로 고정</strong>
+                &mdash; <code>step_collect</code> command-plan 신설 &rarr; shell&harr;TS 인자 벡터 parity drift 방어 &rarr;
+                delegate 호출 exactly-N 락. 왜: 수집 leg이 조용히 어긋나는 것을 막기 위함. <span class="state run">진행 중</span> PR 231건</li>
+            <li><strong>조회 latency 측정 하네스 구축 후 컨트롤러에 순차 배선</strong> &mdash; 측정 primitive &rarr; 표본 수집기 &rarr;
+                Summary/Assessment/Contribution 배선, 주입 clock으로 결정론화. 왜: 성능 회귀를 재현 가능하게 감시.
+                <span class="state run">진행 중</span> PR 55건</li>
+            <li><strong>백업 dump import/export 경로 완성 및 HTTP 계약 정합</strong> &mdash; multipart 수신 &middot; 50MiB 상한과 413 매핑 &middot;
+                복원 미배선 구간 false-success 차단 가드 &middot; 실행 없는 preview endpoint &middot; 500&rarr;400 교정.
+                <span class="state done">완료(머지)</span> PR 약 65건</li>
+            <li><strong>로컬 LLM 런너를 실 평가 e2e에 연결</strong> &mdash; stale 런너 kill 목록에 <code>llama-server</code> 추가,
+                PAT + Ollama LAN 셋업(Q-0053). <span class="state">관찰 &middot; 9일 무진전</span></li>
+          </ol>
+          <div class="metrics">
+            <div class="m"><span class="k">커밋</span><span class="v">794</span> <span class="t">&harr; 기준선</span></div>
+            <div class="m"><span class="k">PR 생성/머지</span><span class="v">497/496</span> <span class="t">99.8%</span></div>
+            <div class="m zero"><span class="k">리뷰 제출</span><span class="v">0</span> <span class="t">범위 0명</span></div>
+            <div class="m"><span class="k">활동일</span><span class="v">24</span> <span class="t">/ 31일</span></div>
+            <div class="m"><span class="k">PR 규모 중앙</span><span class="v">279</span> <span class="t">줄 &middot; 파일 2</span></div>
+            <div class="m"><span class="k">사이클 중앙</span><span class="v">0.11</span> <span class="t">시간</span></div>
+          </div>
+          <dl class="kv">
+            <dt>주 활동 레포</dt><dd><span class="repo">myungjoo/Assessment-Agent</span> <span class="num">794</span> <span style="color:var(--ink-3)">(집중도 100%)</span></dd>
+            <dt>비공개 기여</dt><dd><span class="num">4</span>건 조회 불가 &mdash; 위 수치는 조회 가능분 기준</dd>
+            <dt>주말 비중</dt><dd><span class="num">30.0%</span> (389 / 1,296) &mdash; 기준 30% 근소 초과</dd>
+          </dl>
+          <p class="read">한 레포에 100% 집중한 단일 프로젝트 스프린트다. PR 규모 중앙 279줄 &middot; 파일 2개는 작업을 매우 작은 단위로 쪼개는
+            습관을 보여주고, 커밋 794건 대비 PR 497건은 PR 1건당 커밋 1~2개라는 뜻이다. 사이클 6분 &middot; 리뷰 0건은
+            <strong>1인 파이프라인</strong>이며 속도 지표로 해석해선 안 된다. 07-06 시작 &rarr; 07-17(106) &middot; 07-24(109) 피크 &rarr;
+            07-29~31에 36&rarr;21&rarr;14 하강. <strong>스프린트 종반인지 소진 중인지는 이 데이터로 판별 불가.</strong></p>
+        </div>
+      </article>
+
+      <!-- leemgs -->
+      <article class="card taggable" data-tags="noreview stalled" data-primary>
+        <div class="card-h">
+          <p class="card-name">Geunsik Lim <span class="card-id">leemgs</span></p>
+          <div class="card-role">팀 (미기입) &middot; 담당 (미기입) &middot; 역할 정보 미기입 &mdash; 역할 맥락 없이 제시됨</div>
+          <div class="flags">
+            <span class="flag on">정체 5건</span>
+            <span class="flag on">리뷰 0건</span>
+            <span class="flag">25개 레포 분산</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <p class="sub">지금 하는 일 &middot; 근거: 25개 레포 커밋 575건 &middot; PR 25건 &middot; 이슈 5건 &middot; 커밋 메시지 표본</p>
+          <ol class="marked">
+            <li><strong>데이터셋 법적 리스크 검토 에이전트("Beagle") 운용과 개선</strong> &mdash; 종합의견을 4열 표로 정형화,
+                검토 만족도 대시보드, CSV/JSON 내보내기, 외부 작성자 승인 라벨, LLM 모델을 tracker와 분리해 무료 티어 쿼터(429) 회피,
+                고신뢰(0.95+) 제안 PR 자동 머지. 왜: 학습 데이터 컴플라이언스 검토를 사람 손 없이 돌리기 위함.
+                커밋 134건(팀 내 최다 단일 주제). <span class="state run">진행 중</span> <span class="state stall">검토 이슈 5건 정체</span></li>
+            <li><strong>시스템 소프트웨어 연구 논문 &middot; 재현 패키지 다수 병행</strong> &mdash; 커널 오토튜닝(<code>semantos</code>),
+                합성 텍스트 판별(<code>truthprint</code>), 계층 메모리 오케스트레이션(<code>orion</code>),
+                힙 메모리 안전(<code>heap-memory-safeguard</code>), 커널 스케줄링(<code>sched_brs</code>) 등 8개 레포.
+                베이스라인 측정값을 논문 표에 채우고 리뷰어 라운드 6&middot;8 지적(통계적 검정력 &middot; 순환논리 &middot; HPC provenance)에 대응.
+                <span class="state run">진행 중</span> 산출 형태가 코드보다 논문</li>
+            <li><strong>웨비나 자동 수집 &middot; 등록 시스템 구축</strong> &mdash; 다중 소스 크롤링, 경품 배너 이미지 추출 공용화,
+                캘린더 UI. 07-06~08 3일 집중, PR 19건 전량 머지. <span class="state done">완료(머지)</span></li>
+            <li><strong>개인 생산성 &middot; 일정 도구 다수</strong> &mdash; <code>mymemo</code> 122건(단일 레포 2위),
+                학회 캘린더 46건, <code>bucket-list</code> 28건 등. <span class="state run">진행 중</span></li>
+          </ol>
+          <div class="metrics">
+            <div class="m"><span class="k">커밋</span><span class="v">575</span> <span class="t">&harr; 기준선</span></div>
+            <div class="m"><span class="k">PR 생성/머지</span><span class="v">25/25</span> <span class="t">100%</span></div>
+            <div class="m zero"><span class="k">리뷰 제출</span><span class="v">0</span> <span class="t">범위 0명</span></div>
+            <div class="m"><span class="k">활동일</span><span class="v">27</span> <span class="t">/ 31일</span></div>
+            <div class="m"><span class="k">PR 규모 중앙</span><span class="v">110</span> <span class="t">줄 &middot; 파일 3</span></div>
+            <div class="m"><span class="k">사이클 중앙</span><span class="v">0.2</span> <span class="t">분</span></div>
+          </div>
+          <dl class="kv">
+            <dt>주 활동 레포</dt><dd><span class="repo">leemgs/mymemo</span> <span class="num">122</span> &middot;
+              <span class="repo">aigovsensing/dataset-review</span> <span class="num">74</span> &middot;
+              <span class="repo">aigovsensing/ai-suit-sensing</span> <span class="num">60</span> &middot;
+              <span class="repo">leemgs/webinar</span> <span class="num">47</span> (외 21개, 집중도 21.2%)</dd>
+            <dt>비공개 기여</dt><dd>0건으로 보고 &mdash; 실제 0건인지 표시 설정 때문인지 <strong>구분 불가</strong></dd>
+            <dt>주말 비중</dt><dd><span class="num">16.6%</span> (102 / 615) &mdash; 기준 이내</dd>
+          </dl>
+          <p class="read">활동일 27/31일로 지속성이 가장 높다. 커밋 575건에 PR 25건 &mdash; 즉 대부분 기본 브랜치 직접 푸시이며,
+            이 때문에 <strong>PR 기반 지표(규모 &middot; 사이클 타임)는 그의 작업 대부분을 대표하지 못한다.</strong>
+            이 사람의 지표는 PR이 아니라 레포 폭과 이슈 운용으로 읽어야 한다. 분산 자체를 문제로 볼 수도 있으나
+            논문 8편 병행과 검토 에이전트 운용이 동시에 돌아가는 구조라면 정상 패턴일 수 있다 &mdash;
+            <strong>역할 정보가 없어 판별 불가.</strong></p>
+        </div>
+      </article>
+
+      <!-- again4you -->
+      <article class="card dim taggable" data-tags="noreview" data-primary>
+        <div class="card-h">
+          <p class="card-name">Sangjung Woo <span class="card-id">again4you</span></p>
+          <div class="card-role">팀 (미기입) &middot; 담당 (미기입) &middot; 역할 정보 미기입 &mdash; 역할 맥락 없이 제시됨</div>
+          <div class="flags">
+            <span class="flag blind">관측 공백 &middot; 공개 기여 1건</span>
+            <span class="flag on">리뷰 0건</span>
+            <span class="flag">ID 유효</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <p class="sub">지금 하는 일</p>
+          <ol class="marked">
+            <li><strong>주제 파악 불가(공개 활동 부족).</strong> 7월 공개 기여는 07-02 단 1건이며 커밋 &middot; PR &middot; 리뷰 &middot; 이슈
+                어느 분류에도 잡히지 않아 <strong>활동의 성격조차 특정할 수 없다.</strong> 추정으로 채우지 않는다.</li>
+          </ol>
+          <div class="metrics">
+            <div class="m zero"><span class="k">커밋</span><span class="v">0</span> <span class="t">공개 기준</span></div>
+            <div class="m zero"><span class="k">PR 생성/머지</span><span class="v">0/0</span> <span class="t">&mdash;</span></div>
+            <div class="m zero"><span class="k">리뷰 제출</span><span class="v">0</span> <span class="t">범위 0명</span></div>
+            <div class="m"><span class="k">활동일</span><span class="v">1</span> <span class="t">/ 31일</span></div>
+            <div class="m zero"><span class="k">PR 규모 중앙</span><span class="v">&mdash;</span> <span class="t">해당 없음</span></div>
+            <div class="m zero"><span class="k">사이클 중앙</span><span class="v">&mdash;</span> <span class="t">해당 없음</span></div>
+          </div>
+          <dl class="kv">
+            <dt>주 활동 레포</dt><dd>관측 없음</dd>
+            <dt>기간 외 참고</dt><dd>2026 상반기 공개 기여 <span class="num">20</span>건, 전량
+              <span class="repo">nnstreamer/nnstreamer</span> &middot; <span class="repo">nnstreamer/api</span>.
+              그중 <strong>리뷰 8건 &gt; 커밋 3건</strong></dd>
+            <dt>비공개 기여</dt><dd>0건으로 보고 &mdash; 실제 0건인지 <strong>구분 불가</strong></dd>
+          </dl>
+          <p class="read"><strong>이것을 "활동 없음"으로 읽으면 오판이다.</strong> 이 계정의 github.com 활동은 원래 저volume이고
+            <strong>리뷰 중심</strong>이다. 실제 산출은 조회 범위 밖(사내 Enterprise 또는 비공개)에 있을 가능성이 높다.
+            판단은 사내 호스트 조회가 가능해질 때까지 유보한다.</p>
+        </div>
+      </article>
+
+      <!-- jaeyun-jung -->
+      <article class="card dim taggable" data-tags="noreview" data-primary>
+        <div class="card-h">
+          <p class="card-name">(미공개) <span class="card-id">jaeyun-jung</span></p>
+          <div class="card-role">팀 (미기입) &middot; 담당 (미기입) &middot; 역할 정보 미기입 &mdash; 역할 맥락 없이 제시됨</div>
+          <div class="flags">
+            <span class="flag blind">관측 공백 &middot; 공개 기여 0건</span>
+            <span class="flag on">리뷰 0건</span>
+            <span class="flag">ID 유효 &middot; 실명 미공개</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <p class="sub">지금 하는 일</p>
+          <ol class="marked">
+            <li><strong>주제 파악 불가(공개 활동 없음).</strong> 7월 공개 기여 0건. 추정으로 채우지 않는다.
+                API 조회 자체는 성공했으므로 <strong>ID 오기입은 아니다</strong> &mdash; 프로필에 실명이 없어 표시 이름을
+                <code>(미공개)</code>로 기입했다.</li>
+          </ol>
+          <div class="metrics">
+            <div class="m zero"><span class="k">커밋</span><span class="v">0</span> <span class="t">공개 기준</span></div>
+            <div class="m zero"><span class="k">PR 생성/머지</span><span class="v">0/0</span> <span class="t">&mdash;</span></div>
+            <div class="m zero"><span class="k">리뷰 제출</span><span class="v">0</span> <span class="t">범위 0명</span></div>
+            <div class="m zero"><span class="k">활동일</span><span class="v">0</span> <span class="t">/ 31일</span></div>
+            <div class="m zero"><span class="k">PR 규모 중앙</span><span class="v">&mdash;</span> <span class="t">해당 없음</span></div>
+            <div class="m zero"><span class="k">사이클 중앙</span><span class="v">&mdash;</span> <span class="t">해당 없음</span></div>
+          </div>
+          <dl class="kv">
+            <dt>주 활동 레포</dt><dd>관측 없음</dd>
+            <dt>기간 외 참고</dt><dd>2026 상반기 공개 기여 <span class="num">62</span>건, 전량 On-Device 스트리밍 런타임 계열:
+              <span class="repo">nnstreamer/nnstreamer</span> 12 &middot; <span class="repo">nnstreamer/api</span> 8 &middot;
+              <span class="repo">deviceMLOps.MLAgent</span> 5 &middot; <span class="repo">nnstreamer-edge</span> 3.
+              리뷰 14건 &middot; PR 19건 포함</dd>
+            <dt>비공개 기여</dt><dd>0건으로 보고 &mdash; 실제 0건인지 <strong>구분 불가</strong></dd>
+          </dl>
+          <p class="read"><code>again4you</code>와 같은 구조다. <strong>월 10건 남짓의 저volume 공개 활동이 원래 패턴</strong>이며,
+            7월 0건은 그 패턴 안에서의 변동일 수 있다. 전월 스냅샷이 없어 급감 판정은 하지 않았다(첫 회차).</p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ================= HEATMAP ================= -->
+  <section id="sec-hm">
+    <div class="sechead">
+      <h2>활동 히트맵 &middot; 인원 &times; 날짜</h2>
+      <p class="note">셀 농도 = 일일 기여 수. 주말 열은 테두리로 표시 &mdash; 과부하 신호로만 읽는다</p>
+    </div>
+    <div class="panel">
+      <div class="scrollx">
+        <div class="hm" id="hm"></div>
+      </div>
+      <div class="legend" id="hmLegend"></div>
+      <p class="read">팀 리듬: <code>myungjoo</code>는 07-01~05 공백 후 07-06 착수 &rarr; 07-17 &middot; 07-24 피크 &rarr; 월말 하강.
+        <code>leemgs</code>는 07-01~08 전반 집중(웨비나 스프린트) 후 중순 저점, 07-17 &middot; 07-20 &middot; 07-23~24 스파이크,
+        월말 거의 정지. <strong>두 사람의 리듬이 겹치지 않으며 공동 작업 구간이 관측되지 않는다.</strong>
+        아래 두 행의 공백은 활동이 아니라 <strong>관측의 공백</strong>이다.</p>
+    </div>
+  </section>
+
+  <!-- ================= REVIEW MATRIX ================= -->
+  <section id="sec-mx">
+    <div class="sechead">
+      <h2>리뷰 네트워크 매트릭스</h2>
+      <p class="note">행 = 리뷰어, 열 = PR 작성자. 빈 행(리뷰 0건)과 빈 열(리뷰 못 받는 사람)이 보이는 것이 목적이다</p>
+    </div>
+    <div class="panel">
+      <div class="scrollx">
+        <div class="mx" id="mx"></div>
+      </div>
+      <p class="read"><strong>격자 전체가 비어 있다.</strong> 조회 범위 안에서 리뷰 제출이 4명 전원 0건이고,
+        관측된 PR 521건 중 리뷰가 1건 이상 붙은 PR도 0건이다. 리뷰를 준 사람도, 받은 사람도 없다.
+        ① 실제 self-merge 진행(사일로 신호) ② 상호 리뷰가 사내/비공개 레포에서 진행 &mdash; <strong>이 데이터로는 구분되지 않는다.</strong>
+        다만 <code>again4you</code>(상반기 리뷰 8건) &middot; <code>jaeyun-jung</code>(14건)은 <code>nnstreamer</code> 계열 리뷰 이력이 있어
+        최소한 이 두 사람에 대해서는 ②의 설명력이 더 크다. 확정적으로 말할 수 있는 것은
+        <strong>부서원 상호 간 리뷰 관계가 이번 회차에 한 건도 관측되지 않았다</strong>는 것뿐이다.</p>
+    </div>
+  </section>
+
+  <!-- ================= TOP REPOS ================= -->
+  <section data-narrative>
+    <div class="sechead">
+      <h2>상위 활동 레포 &middot; 커밋</h2>
+      <p class="note">팀 커밋 1,369건의 실제 착지점</p>
+    </div>
+    <div class="panel">
+      <div class="bars" id="bars"></div>
+      <p class="read">단일 레포 하나가 팀 커밋의 58%다. 언어 축은 TypeScript 794건과 JavaScript &middot; Python &middot; HTML &middot; TeX 분산 575건이며,
+        <strong>C/C++ 런타임 &middot; 커널 &middot; 컴파일러 커밋은 0건</strong>이다.</p>
+    </div>
+  </section>
+
+  <!-- ================= TECH DIRECTION ================= -->
+  <section data-narrative>
+    <div class="sechead"><h2>기술 방향 관찰</h2><p class="note">관심 영역: On-Device LLM &middot; Runtime &middot; Compiler &middot; 경량화</p></div>
+    <div class="panel">
+      <ul class="marked">
+        <li><strong>관심 영역과 직결되는 코드 활동은 이번 회차 공개 범위에서 거의 관측되지 않았다.</strong>
+            단정할 수 있는 것은 "관측되지 않았다"까지이며, 사내 Enterprise 미포함이 주된 이유일 수 있다.</li>
+        <li><strong>연구 축에서는 정렬이 보인다.</strong> <code>leemgs</code>의 논문 레포군이 커널 오토튜닝(<code>semantos</code>) &middot;
+            계층 메모리 오케스트레이션(<code>orion</code>) &middot; 힙 메모리 안전(<code>heap-memory-safeguard</code>) &middot;
+            커널 스케줄링(<code>sched_brs</code>)으로 Runtime &middot; 경량화 축과 주제가 맞닿는다.
+            다만 산출 형태가 <strong>구현 코드가 아니라 논문 &middot; 재현 패키지(TeX)</strong>라는 점은 구분해 둘 필요가 있다.</li>
+        <li><strong>로컬 LLM 접점은 한 곳.</strong> <code>myungjoo</code>가 <code>llama-server</code> 런너 정리와 Ollama LAN 셋업으로
+            로컬 추론을 실 파이프라인에 붙이는 중이다(해당 이슈 9일 무진전). 반대로 <code>leemgs</code>의 에이전트는
+            Gemini API 기반, 즉 클라우드 축이다.</li>
+        <li><strong>On-Device 스트리밍 런타임(<code>nnstreamer</code> 계열)은 이번 회차 관측 공백이다.</strong>
+            해당 축의 두 인원이 7월 공개 활동 0~1건이어서 조직의 핵심 기술 축 하나가 이 브리핑으로는 전혀 보이지 않는다.
+            <strong>이것이 이번 회차 최대의 관측 결손이다.</strong></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= HISTORY ================= -->
+  <section data-narrative>
+    <div class="sechead"><h2>최근 회차 이력</h2><p class="note">reports 폴더 기준 누적</p></div>
+    <details class="hist">
+      <summary>회차별 팀 총량 추이 &mdash; 1개 회차 기록됨 (2026-07)</summary>
+      <div class="hist-b">
+        <div class="scrollx">
+          <table>
+            <thead><tr><th>회차</th><th class="n">커밋</th><th class="n">PR 생성</th><th class="n">PR 머지</th><th class="n">리뷰</th><th class="n">비공개(불가)</th><th>비고</th></tr></thead>
+            <tbody>
+              <tr><td>2026-07 (30d)</td><td class="n">1,369</td><td class="n">522</td><td class="n">521</td><td class="n">0</td><td class="n">4</td><td>기준선 수집 회차</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="read">기록된 회차가 1개뿐이므로 추이선을 그리지 않는다. <strong>없는 비교를 만들지 않기 위한 의도적 공백</strong>이며,
+          2026-08 회차부터 인원별 &middot; 팀별 &plusmn;25% 임계 화살표가 붙는다. 최대 6회차까지 이 표에 누적된다.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ================= CAUTIONS (never hidden) ================= -->
+  <section class="caution" data-always>
+    <div class="sechead"><h2>지표 해석 주의</h2><p class="note">어떤 필터에서도 숨기지 않는 섹션</p></div>
+    <div class="panel">
+      <ul class="marked">
+        <li>커밋 수와 코드 줄 수는 <strong>생산성 지표가 아니다.</strong> 리팩터링 &middot; 설계 &middot; 디버깅 &middot; 리뷰는 줄 수로 나타나지 않는다.
+            1,000줄 삭제가 1,000줄 추가보다 가치 있는 경우가 흔하다.</li>
+        <li>역할이 다른 인원(아키텍트 vs 기능 개발자 vs 오픈소스 Maintainer)을 같은 숫자로 비교하지 않는다.
+            <strong>이번 회차는 4명 전원 역할 정보가 미기입이라 인원 간 수치 비교는 근거가 없다.</strong></li>
+        <li>사이클 타임이 짧은 것이 좋은 것이 아니다. 이번 회차의 6분 &middot; 0.2분은 <strong>리뷰 게이트 부재</strong>의 결과다.
+            반대로 길다면 개인 속도가 아니라 <strong>리뷰 대기 &middot; CI 지연</strong> 문제일 가능성이 먼저다.</li>
+        <li>비공개 기여 4건이 조회 범위 밖이고 그 4건은 조회 계정 본인의 것이다. 다른 3명의 <code>0</code>은
+            "없음"이 아니라 <strong>"보이지 않음"</strong>일 수 있다. 이 브리핑은 <strong>부분 관측</strong>이다.</li>
+        <li>주말 활동은 성실성의 근거가 아니다. <strong>과부하 신호로만 쓴다.</strong> 연속 활동일수도 미덕으로 쓰지 않는다.</li>
+        <li>인원을 단일 종합 점수로 순위 매기지 않았다. 다차원 활동을 1차원으로 압축하면 압축 과정의 가정이 결론을 결정한다.</li>
+        <li><strong>이 브리핑은 인사 평가 근거가 아니다.</strong> 용도는 자원 배치 판단 &middot; 병목 발견 &middot; 과부하 확인 &middot;
+            기술 방향 정렬 점검이다. 평가에 쓰려면 본인 확인과 맥락 청취가 반드시 선행돼야 한다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="foot" data-narrative>
+    <p>대상 4명 &middot; API 호출 약 40건(GraphQL 9 &middot; REST 약 31) &middot; 조회 실패 0건 &middot; 비공개 기여 4건 조회 불가</p>
+    <p>첫 실행(기준선 수집 회차) &middot; 전월 대비 추이는 2026-08 회차부터 &middot; 데이터 원본: github.com GraphQL contributionsCollection</p>
+  </div>
+</div>
+
+<div id="tip" role="status" aria-live="polite" style="position:fixed;z-index:90;pointer-events:none;opacity:0;transition:opacity 110ms ease;background:var(--ink);color:var(--plane);font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:3px;white-space:nowrap;max-width:80vw"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- data (2026-07-01 .. 2026-07-31, 07-01 = Wed) ---------------- */
+  var PEOPLE = [
+    { id: "myungjoo",    name: "MyungJoo Ham", days: [0,0,0,0,0,10,10,44,75,68,92,44,46,90,64,45,106,94,0,0,6,16,51,109,85,74,40,56,36,21,14], tags: "overload noreview" },
+    { id: "leemgs",      name: "Geunsik Lim",  days: [60,10,42,29,28,28,78,53,9,8,3,10,0,6,14,7,37,21,0,34,9,1,64,43,0,11,1,0,2,2,5],           tags: "noreview stalled" },
+    { id: "again4you",   name: "Sangjung Woo", days: [0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],                          tags: "noreview" },
+    { id: "jaeyun-jung", name: "(미공개)",      days: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],                          tags: "noreview" }
+  ];
+  var WEEKEND = { 4:1, 5:1, 11:1, 12:1, 18:1, 19:1, 25:1, 26:1 };  /* day-of-month */
+  var BINS = [
+    { min: 1,  max: 9,   step: "--s1", label: "1~9" },
+    { min: 10, max: 29,  step: "--s2", label: "10~29" },
+    { min: 30, max: 59,  step: "--s3", label: "30~59" },
+    { min: 60, max: 89,  step: "--s4", label: "60~89" },
+    { min: 90, max: 1e9, step: "--s5", label: "90+" }
+  ];
+  var REPOS = [
+    { r: "myungjoo/Assessment-Agent",       c: 794, who: "myungjoo" },
+    { r: "leemgs/mymemo",                   c: 122, who: "leemgs" },
+    { r: "aigovsensing/dataset-review",     c: 74,  who: "leemgs" },
+    { r: "aigovsensing/ai-suit-sensing",    c: 60,  who: "leemgs" },
+    { r: "leemgs/webinar",                  c: 47,  who: "leemgs" },
+    { r: "leemgs/truthprint",               c: 29,  who: "leemgs" },
+    { r: "leemgs/orion",                    c: 28,  who: "leemgs" },
+    { r: "leemgs/bucket-list",              c: 28,  who: "leemgs" },
+    { r: "leemgs/conference_kiise",         c: 26,  who: "leemgs" }
+  ];
+
+  function el(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) { n.className = cls; }
+    if (txt !== undefined) { n.textContent = txt; }
+    return n;
+  }
+  function binOf(v) {
+    for (var i = 0; i < BINS.length; i++) { if (v >= BINS[i].min && v <= BINS[i].max) { return BINS[i]; } }
+    return null;
+  }
+
+  /* ---------------- tooltip ---------------- */
+  var tip = document.getElementById("tip");
+  function showTip(e, text) {
+    tip.textContent = text;
+    tip.style.opacity = "1";
+    var pad = 12;
+    var x = e.clientX + pad, y = e.clientY + pad;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    if (x + w > window.innerWidth - 6) { x = e.clientX - w - pad; }
+    if (y + h > window.innerHeight - 6) { y = e.clientY - h - pad; }
+    tip.style.left = Math.max(6, x) + "px";
+    tip.style.top = Math.max(6, y) + "px";
+  }
+  function hideTip() { tip.style.opacity = "0"; }
+  function bindTip(node, text) {
+    node.setAttribute("aria-label", text);
+    node.addEventListener("mousemove", function (e) { showTip(e, text); });
+    node.addEventListener("mouseleave", hideTip);
+  }
+
+  /* ---------------- heatmap ---------------- */
+  var hm = document.getElementById("hm");
+  var head = el("div", "hm-row");
+  head.appendChild(el("div", "hm-lab", "2026-07"));
+  for (var d = 1; d <= 31; d++) {
+    var lab = el("div", "hm-d" + (WEEKEND[d] ? " we" : ""), (d % 5 === 0 || d === 1) ? String(d) : "");
+    head.appendChild(lab);
+  }
+  head.appendChild(el("div", "hm-sum", "합계"));
+  hm.appendChild(head);
+
+  PEOPLE.forEach(function (p) {
+    var row = el("div", "hm-row taggable");
+    row.setAttribute("data-tags", p.tags);
+    row.appendChild(el("div", "hm-lab", p.name + " / " + p.id));
+    var sum = 0;
+    p.days.forEach(function (v, i) {
+      var dom = i + 1;
+      var c = el("div", "cell" + (WEEKEND[dom] ? " we" : ""));
+      var b = binOf(v);
+      if (b) { c.style.background = "var(" + b.step + ")"; }
+      sum += v;
+      bindTip(c, p.id + " · 2026-07-" + (dom < 10 ? "0" + dom : dom) + (WEEKEND[dom] ? " (주말)" : "") + " · 기여 " + v + "건");
+      row.appendChild(c);
+    });
+    row.appendChild(el("div", "hm-sum", sum.toLocaleString()));
+    hm.appendChild(row);
+  });
+
+  var lg = document.getElementById("hmLegend");
+  lg.appendChild(el("span", null, "일일 기여"));
+  var z = el("span", "sw"); z.style.background = "var(--s0)"; lg.appendChild(z);
+  lg.appendChild(el("span", null, "0"));
+  BINS.forEach(function (b) {
+    var s = el("span", "sw"); s.style.background = "var(" + b.step + ")";
+    lg.appendChild(s); lg.appendChild(el("span", null, b.label));
+  });
+  var we = el("span", "sw"); we.style.background = "transparent";
+  we.style.boxShadow = "inset 0 0 0 1px color-mix(in srgb, var(--attn) 60%, transparent)";
+  lg.appendChild(we); lg.appendChild(el("span", null, "주말 열"));
+
+  /* ---------------- review matrix (all zero by observation) ---------------- */
+  var mx = document.getElementById("mx");
+  var mh = el("div", "mx-row");
+  mh.appendChild(el("div", "mx-lab", "리뷰어 \\ 작성자"));
+  PEOPLE.forEach(function (p) { mh.appendChild(el("div", "mx-h", p.id)); });
+  mh.appendChild(el("div", "mx-h", "제출 합계"));
+  mx.appendChild(mh);
+
+  PEOPLE.forEach(function (rev) {
+    var row = el("div", "mx-row taggable");
+    row.setAttribute("data-tags", "noreview");
+    row.appendChild(el("div", "mx-lab", rev.id));
+    PEOPLE.forEach(function (auth) {
+      if (auth.id === rev.id) {
+        var s = el("div", "mx-c self");
+        s.setAttribute("aria-label", "자기 자신 - 집계 대상 아님");
+        row.appendChild(s);
+        return;
+      }
+      var c = el("div", "mx-c", "0");
+      bindTip(c, rev.id + " → " + auth.id + " · 리뷰 0건 (관측 범위 내)");
+      row.appendChild(c);
+    });
+    var t = el("div", "mx-tot", "0건");
+    row.appendChild(t);
+    mx.appendChild(row);
+  });
+
+  /* ---------------- top repo bars ---------------- */
+  var bars = document.getElementById("bars");
+  var max = REPOS[0].c;
+  REPOS.forEach(function (r) {
+    var row = el("div", "bar-row");
+    row.appendChild(el("div", "bar-lab", r.r));
+    var track = el("div", "bar-track");
+    var fill = el("div", "bar-fill");
+    fill.style.width = Math.max(1.5, (r.c / max) * 100) + "%";
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el("div", "bar-v", r.c.toLocaleString()));
+    bindTip(track, r.r + " · 커밋 " + r.c + "건 · " + r.who);
+    bars.appendChild(row);
+  });
+
+  /* ---------------- badge counts from data-tags ---------------- */
+  var FILTERS = ["stalled", "overload", "dropped", "noreview", "idcheck"];
+  FILTERS.forEach(function (f) {
+    var n = document.querySelectorAll('[data-tags~="' + f + '"][data-primary]').length;
+    var slot = document.querySelector('[data-count="' + f + '"]');
+    if (slot) { slot.textContent = n; }
+    var btn = document.querySelector('[data-filter="' + f + '"]');
+    if (btn && n === 0) { btn.classList.add("zero"); }
+  });
+
+  /* ---------------- filtering ---------------- */
+  var active = null;
+  var clearBtn = document.getElementById("clearBtn");
+  var taggables = Array.prototype.slice.call(document.querySelectorAll(".taggable"));
+  var narratives = Array.prototype.slice.call(document.querySelectorAll("[data-narrative]"));
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section"));
+
+  function has(node, f) {
+    return (" " + (node.getAttribute("data-tags") || "") + " ").indexOf(" " + f + " ") >= 0;
+  }
+
+  function apply() {
+    document.querySelectorAll(".zstate").forEach(function (z) { z.classList.remove("on"); });
+    narratives.forEach(function (n) { n.hidden = !!active; });
+
+    if (!active) {
+      taggables.forEach(function (t) { t.hidden = false; });
+      sections.forEach(function (s) { s.hidden = false; });
+      clearBtn.hidden = true;
+    } else {
+      taggables.forEach(function (t) { t.hidden = !has(t, active); });
+      sections.forEach(function (s) {
+        if (s.hasAttribute("data-always")) { s.hidden = false; return; }
+        if (s.hasAttribute("data-narrative")) { s.hidden = true; return; }
+        var inner = s.querySelectorAll(".taggable");
+        if (!inner.length) { s.hidden = true; return; }
+        var anyVisible = Array.prototype.some.call(inner, function (t) { return !t.hidden; });
+        s.hidden = !anyVisible;
+      });
+      var zp = document.getElementById("z-" + active);
+      if (zp) { zp.classList.add("on"); }
+      clearBtn.hidden = false;
+    }
+
+    document.querySelectorAll("[data-filter]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-filter") === active ? "true" : "false");
+    });
+    hideTip();
+  }
+
+  document.querySelectorAll("[data-filter]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var f = b.getAttribute("data-filter");
+      active = (active === f) ? null : f;
+      apply();
+    });
+  });
+  clearBtn.addEventListener("click", function () { active = null; apply(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && active) { active = null; apply(); }
+  });
+
+  apply();
+})();
+</script>

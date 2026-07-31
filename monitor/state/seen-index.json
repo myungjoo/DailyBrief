@@ -1,0 +1,158 @@
+﻿{
+  "_schema": "ondevice-llm-monitor seen-index v1",
+  "_rules": {
+    "dedup_window_days": 5,
+    "resurgence": "attention >= 1.5x attention_at_last_report AND attention >= 70, OR stepwise quantitative signal jump (GitHub weekly stars 3x prior or +2000/week), OR new major exposure (HN front, r/LocalLLaMA top, HF Trending), OR adoption into a Tier-A commercial SDK",
+    "note": "Never reset this file. Suppressed items keep their original last_reported; record the newly observed score in attention_observed instead."
+  },
+  "last_run": "2026-07-31",
+  "items": [
+    {
+      "key": "meta-ondevice-llm-state-of-union-2026",
+      "title": "Meta, On-Device LLMs: State of the Union 2026 - 병목은 대역폭",
+      "url": "https://v-chandra.github.io/on-device-llms/",
+      "category": "strategy",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 72,
+      "attention_evidence": "Tier A 조직 공식 정세 판단, 워치리스트 연구자(Vikas Chandra) 저자, 업계 인용 다수, 정량 근거 포함"
+    },
+    {
+      "key": "qualcomm-x2-80tops-3d-dram-npu-roadmap",
+      "title": "Qualcomm 80 TOPS 전 스택 균일화 + 3D-DRAM 스택 NPU 로드맵",
+      "url": "https://www.qualcomm.com/developer/blog/2026/05/local-agentic-ai-with-llmware-on-pcs-with-snapdragon-x-series",
+      "category": "hardware",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 70,
+      "attention_evidence": "Tier A 공식 발표, 상용 제품 전이, 광범위 언론 보도, 실측 포함. 로드맵 수치는 2차 출처"
+    },
+    {
+      "key": "exynos2600-vs-dimensity9500-npu",
+      "title": "Exynos 2600(2nm) vs Dimensity 9500 NPU 990 경쟁 구도",
+      "url": "https://www.androidauthority.com/exynos-vs-snapdragon-galaxy-s26-benchmarks-3653459/",
+      "category": "hardware",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 66,
+      "attention_evidence": "자사 핵심 경쟁 사안, 광범위 보도, 벤더 자체 정량 수치(3자 실측 미확인)"
+    },
+    {
+      "key": "google-litert-lm-gemma4-arm-sme2",
+      "title": "Google LiteRT-LM × Gemma 4 × ARM SME2 자동 커널 선택",
+      "url": "https://developers.googleblog.com/blazing-fast-on-device-genai-with-litert-lm/",
+      "category": "runtime",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 65,
+      "attention_evidence": "Tier A 공식, 상용 SDK 즉시 적용, ARM 협업. 절대 이득치 미공개"
+    },
+    {
+      "key": "executorch-unified-pytorch-ondevice-paper",
+      "title": "ExecuTorch 통합 온디바이스 런타임 논문 (arXiv 2605.08195)",
+      "url": "https://arxiv.org/abs/2605.08195",
+      "category": "runtime",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 64,
+      "attention_evidence": "Tier A, 상용 툴체인 즉시 적용, 정량 실측(50KB/12+ 백엔드/HF 80%+), 생태계 파급"
+    },
+    {
+      "key": "quant-npu-fully-static-quantization",
+      "title": "Quant.npu - 모바일 NPU용 정수 전용 완전 정적 양자화",
+      "url": "https://arxiv.org/abs/2605.20295",
+      "category": "quantization",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 62,
+      "attention_evidence": "온디바이스 NPU 최상위 그룹(Mengwei Xu/BUPT), 실기 NPU 지연 -15.1%, ENN 툴체인 직접 적용 가능",
+      "followup": "원문 정독 필요 - NPU 모델명, TTFT, 메모리, perplexity 저하율 미확인"
+    },
+    {
+      "key": "colibri-pure-c-disk-expert-streaming",
+      "title": "Colibri - 디스크 expert 스트리밍으로 744B MoE를 25GB RAM에서",
+      "url": "https://aitoolradar.io/blog/open-source-ai-radar-july-2026",
+      "category": "runtime",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 61,
+      "attention_evidence": "GitHub Trending 2026-07 급부상, 시스템 기법 신규성, 자사 NAND 수직통합 적합성",
+      "followup": "처리량·TTFT·스토리지 I/O 부하 미확인. 저장소 원본 URL 확보 필요"
+    },
+    {
+      "key": "kv-cache-compression-vericache-quantspec-forward-influence",
+      "title": "KV 캐시 압축 3종 - VeriCache / QuantSpec / Forward Influence",
+      "url": "https://huggingface.co/papers/2606.26875",
+      "category": "kv-cache",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 58,
+      "attention_evidence": "HF Daily Papers 노출, 정량 결과(4x 처리량/>90% 수락률/~2.5x), 엣지 롱컨텍스트 직결"
+    },
+    {
+      "key": "tilefuse-amd-xdna2-awq-kernels",
+      "title": "TileFuse - AMD XDNA2 NPU용 AWQ 융합 혼합정밀 커널 라이브러리",
+      "url": "https://arxiv.org/pdf/2606.11357",
+      "category": "compiler",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 56,
+      "attention_evidence": "2026-07-03 v2 갱신, Deming Chen(UIUC) 그룹, 상용 NPU(Ryzen AI) 타깃",
+      "followup": "정량 결과(speedup/latency/memory) 미확인 - 원문 9~13p 정독 필요"
+    },
+    {
+      "key": "atome-lm-ternary-mcu",
+      "title": "Atome LM - ESP32에서 도는 삼항 60K 파라미터 LM",
+      "url": "https://github.com/TilelliLab/atome-lm",
+      "category": "model-embedded",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 55,
+      "attention_evidence": "GitHub 141 stars(신규), ESP32-WROOM-32 실기 ~1 tok/s, 플래시 20KB, TinyStories ppl 6.31 vs 8.12",
+      "watch_signal": "스타 증가율 추적 - HN 노출 시 급상승 재보고 후보"
+    },
+    {
+      "key": "p3-llm-npu-pim-hybrid-formats",
+      "title": "P3-LLM - 엣지 LLM용 NPU-PIM 통합 가속기 + 하이브리드 수치형식",
+      "url": "https://arxiv.org/html/2511.06838v4",
+      "category": "hardware",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 48,
+      "attention_evidence": "PIM 축, 자사 메모리 사업 관련성"
+    },
+    {
+      "key": "bitnet-cpu-kernels-and-bitrl",
+      "title": "BitNet CPU 커널 최적화(1.15-2.1x) · BitRL 1비트 엣지 RL",
+      "url": "https://github.com/microsoft/BitNet",
+      "category": "quantization",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 45,
+      "attention_evidence": "Microsoft 공식 저장소, 2026-01 커널 개선, 삼항 양자화 트랙"
+    },
+    {
+      "key": "specontext-asplos26",
+      "title": "SpeContext (ASPLOS'26) - 스펙큘러티브 문맥 희소성",
+      "url": "https://www.asplos-conference.org/asplos2026/program/index.html",
+      "category": "efficiency",
+      "first_reported": "2026-07-31",
+      "last_reported": "2026-07-31",
+      "report_count": 1,
+      "attention_at_last_report": 44,
+      "attention_evidence": "탑티어 학회(ASPLOS'26) 억셉트, 온디바이스 롱컨텍스트 KV 압박 완화"
+    }
+  ]
+}

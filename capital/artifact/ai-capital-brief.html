@@ -1,0 +1,1085 @@
+<title>AI 자본 흐름 브리핑</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f6f7f8;
+    --surface: #fdfdfe;
+    --surface-2: #f1f3f5;
+    --ink: #0c0e11;
+    --ink-2: #4e545c;
+    --muted: #858c95;
+    --hair: #e2e5e9;
+    --hair-2: #cbd1d8;
+    --accent: #2a78d6;
+    --s1: #2a78d6;
+    --s2: #eb6834;
+    --s3: #1baf7a;
+    --graphite: #5b6470;
+    --warn: #fab219;
+    --warn-ink: #8a5d00;
+    --crit: #d03b3b;
+    --good: #006300;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page: #0c0e10;
+      --surface: #15181b;
+      --surface-2: #1c2024;
+      --ink: #f2f4f6;
+      --ink-2: #b6bcc4;
+      --muted: #838b94;
+      --hair: #262a2f;
+      --hair-2: #363b41;
+      --accent: #3987e5;
+      --s1: #3987e5;
+      --s2: #d95926;
+      --s3: #199e70;
+      --graphite: #7d8794;
+      --warn: #fab219;
+      --warn-ink: #fab219;
+      --crit: #e06666;
+      --good: #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0c0e10;
+    --surface: #15181b;
+    --surface-2: #1c2024;
+    --ink: #f2f4f6;
+    --ink-2: #b6bcc4;
+    --muted: #838b94;
+    --hair: #262a2f;
+    --hair-2: #363b41;
+    --accent: #3987e5;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --graphite: #7d8794;
+    --warn: #fab219;
+    --warn-ink: #fab219;
+    --crit: #e06666;
+    --good: #0ca30c;
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --page: #f6f7f8;
+    --surface: #fdfdfe;
+    --surface-2: #f1f3f5;
+    --ink: #0c0e11;
+    --ink-2: #4e545c;
+    --muted: #858c95;
+    --hair: #e2e5e9;
+    --hair-2: #cbd1d8;
+    --accent: #2a78d6;
+    --s1: #2a78d6;
+    --s2: #eb6834;
+    --s3: #1baf7a;
+    --graphite: #5b6470;
+    --warn: #fab219;
+    --warn-ink: #8a5d00;
+    --crit: #d03b3b;
+    --good: #006300;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.62;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 72px; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ---- masthead ---- */
+  .mast { border-bottom: 2px solid var(--ink); padding: 34px 0 18px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(26px, 4.4vw, 40px); line-height: 1.08; letter-spacing: -0.022em;
+    font-weight: 700; margin: 0 0 14px; text-wrap: balance;
+  }
+  .lede {
+    font-size: clamp(15px, 1.9vw, 18px); line-height: 1.5; color: var(--ink-2);
+    margin: 0; max-width: 64ch; text-wrap: pretty;
+  }
+  .windows {
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted);
+    margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--hair);
+  }
+  .windows b { color: var(--ink-2); font-weight: 600; }
+
+  /* ---- chips ---- */
+  .chipbar {
+    display: flex; flex-wrap: wrap; gap: 7px; align-items: stretch;
+    padding: 16px 0 0;
+  }
+  .chip {
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.25;
+    background: var(--surface); color: var(--ink-2);
+    border: 1px solid var(--hair-2); border-radius: 2px;
+    padding: 6px 9px; cursor: pointer; text-align: left;
+    display: flex; flex-direction: column; gap: 2px; min-width: 78px;
+  }
+  .chip .k { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .chip .v { font-size: 16px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .chip:hover { border-color: var(--accent); color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+  .chip[aria-pressed="true"] .k, .chip[aria-pressed="true"] .v { color: #fff; }
+  .chip.static { cursor: default; background: transparent; border-style: dashed; }
+  .chip.static:hover { border-color: var(--hair-2); }
+  .chip:focus-visible, .reset:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .reset {
+    font-family: var(--mono); font-size: 11.5px; padding: 6px 10px;
+    background: transparent; color: var(--accent); border: 1px solid var(--accent);
+    border-radius: 2px; cursor: pointer; align-self: flex-start;
+  }
+  .reset[hidden] { display: none; }
+  .filterbanner {
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-2);
+    border-left: 3px solid var(--accent); padding: 7px 11px; margin: 14px 0 0;
+    background: var(--surface-2);
+  }
+  .filterbanner[hidden] { display: none; }
+
+  /* ---- sections ---- */
+  section { padding: 34px 0 0; }
+  section[hidden] { display: none; }
+  h2 {
+    font-size: 13px; font-family: var(--mono); letter-spacing: 0.12em;
+    text-transform: uppercase; font-weight: 700; color: var(--ink);
+    margin: 0 0 4px; padding-bottom: 8px; border-bottom: 1px solid var(--ink);
+  }
+  .subhead { font-size: 12.5px; color: var(--muted); margin: 8px 0 18px; max-width: 74ch; }
+  .subhead b { color: var(--ink-2); }
+
+  /* ---- exec summary list ---- */
+  ul.bullets { list-style: none; margin: 0; padding: 0; }
+  ul.bullets > li {
+    position: relative; padding: 12px 0 12px 26px;
+    border-bottom: 1px solid var(--hair); font-size: 14.5px; line-height: 1.6;
+    text-wrap: pretty;
+  }
+  ul.bullets > li::before {
+    content: ""; position: absolute; left: 4px; top: 21px;
+    width: 7px; height: 7px; background: var(--accent);
+  }
+  ul.bullets > li:last-child { border-bottom: none; }
+  ul.bullets strong { font-weight: 700; }
+  .act { color: var(--accent); font-weight: 700; }
+
+  /* ---- bar chart ---- */
+  figure { margin: 0; }
+  figcaption { font-size: 12px; color: var(--muted); margin-top: 12px; max-width: 74ch; }
+  .bars { margin: 0 0 6px; }
+  .barrow { padding: 9px 0; border-bottom: 1px solid var(--hair); }
+  .barrow:last-child { border-bottom: none; }
+  .barhead {
+    display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px;
+    align-items: baseline; margin-bottom: 6px;
+  }
+  .barhead .lbl {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em;
+    text-transform: uppercase; white-space: nowrap; color: var(--ink);
+  }
+  .barhead .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .track { height: 22px; background: var(--surface-2); position: relative; }
+  .fill { height: 100%; position: relative; }
+  .fill .val {
+    position: absolute; left: 9px; top: 0; height: 22px; line-height: 22px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; color: #fff;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .fill .val.outside { left: calc(100% + 8px); color: var(--ink); }
+  .c1 { background: var(--s1); }
+  .c2 { background: var(--s2); }
+  .c3 { background: var(--s3); }
+  .cg { background: var(--graphite); }
+
+  /* ---- deal cards ---- */
+  .cards { margin: 0; }
+  .card {
+    background: var(--surface); border: 1px solid var(--hair-2);
+    padding: 18px 18px 16px; margin-bottom: 14px;
+  }
+  .card[hidden] { display: none; }
+  .cardtop {
+    display: grid; grid-template-columns: minmax(0, 1fr) max-content; gap: 12px;
+    align-items: start; padding-bottom: 12px; border-bottom: 1px solid var(--hair);
+  }
+  .card h3 { margin: 0; font-size: 19px; line-height: 1.25; letter-spacing: -0.012em; font-weight: 700; }
+  .card h3 .sub { display: block; font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--ink-2); letter-spacing: 0; margin-top: 4px; }
+  .impact { text-align: right; }
+  .impact .n { font-family: var(--mono); font-size: 26px; font-weight: 700; line-height: 1; }
+  .impact .of { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: block; margin-top: 3px; }
+  .meter { height: 3px; background: var(--surface-2); margin-top: 6px; width: 74px; }
+  .meter i { display: block; height: 100%; background: var(--accent); }
+  .tags { padding: 11px 0 2px; }
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 7px;
+    border: 1px solid var(--hair-2); color: var(--ink-2); margin: 0 5px 5px 0;
+  }
+  .tag.cat1 { border-color: var(--s1); color: var(--s1); }
+  .tag.cat2 { border-color: var(--s2); color: var(--s2); }
+  .tag.cat3 { border-color: var(--s3); color: var(--s3); }
+  .tag.strat { border-color: var(--warn); color: var(--warn-ink); font-weight: 700; }
+  .tag.state { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  dl.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 14px; margin: 10px 0 0; }
+  dl.facts dt {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--muted); white-space: nowrap; padding-top: 3px;
+  }
+  dl.facts dd { margin: 0; font-size: 14px; line-height: 1.55; min-width: 0; }
+  dl.facts dd .num { font-weight: 600; }
+  .prose { font-size: 14px; line-height: 1.6; color: var(--ink-2); margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--hair); text-wrap: pretty; }
+  .prose p { margin: 0 0 8px; }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose b { color: var(--ink); }
+  .verdict { font-weight: 700; color: var(--ink); }
+  .src { font-family: var(--mono); font-size: 11px; margin-top: 11px; color: var(--muted); word-break: break-word; }
+  .src a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--hair-2); }
+  .src a:hover { border-bottom-color: var(--accent); }
+
+  /* ---- tables ---- */
+  .scroll { overflow-x: auto; border: 1px solid var(--hair-2); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 700px; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 11px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  thead th {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--muted); font-weight: 600;
+    border-bottom: 1px solid var(--ink-2); white-space: nowrap; background: var(--surface);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr[hidden] { display: none; }
+  td.n, th.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.name { font-weight: 600; white-space: nowrap; }
+  td a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--hair-2); font-family: var(--mono); font-size: 11.5px; }
+  td a:hover { border-bottom-color: var(--accent); }
+  .dot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; vertical-align: 0; }
+  .zero { color: var(--muted); }
+
+  /* ---- matrix ---- */
+  table.matrix { min-width: 640px; }
+  table.matrix th.rowh { font-family: var(--mono); font-size: 11.5px; text-transform: none; letter-spacing: 0; color: var(--ink); border-bottom: 1px solid var(--hair); white-space: nowrap; font-weight: 600; }
+  table.matrix td { text-align: center; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 14px; }
+  table.matrix td.hit { background: var(--s1); color: #fff; font-weight: 700; }
+  table.matrix td.empty { color: var(--hair-2); }
+  table.matrix thead th { text-align: center; }
+  table.matrix tr.gap-row th.rowh { color: var(--warn-ink); }
+  table.matrix tr.gap-row td.empty { background: var(--surface-2); }
+  .flag {
+    font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--warn-ink);
+    border: 1px solid var(--warn); padding: 1px 6px; white-space: nowrap;
+  }
+
+  /* ---- leaderboard ---- */
+  .lb { border: 1px solid var(--hair-2); background: var(--surface); }
+  .lbrow { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 12px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--hair); }
+  .lbrow:last-child { border-bottom: none; }
+  .lbrow .co { font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .lbrow .co em { font-style: normal; font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-left: 7px; }
+  .lbtrack { height: 12px; background: var(--surface-2); }
+  .lbtrack i { display: block; height: 100%; }
+  .lbrow .amt { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 12.5px; white-space: nowrap; font-weight: 600; }
+
+  /* ---- rumors ---- */
+  .rumorbox { border: 2px dashed var(--hair-2); background: transparent; padding: 4px 16px 14px; }
+  .rumorwarn {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--warn-ink);
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 12px 0 2px;
+  }
+  .rumor { position: relative; padding: 12px 0 12px 22px; border-bottom: 1px dashed var(--hair); opacity: 0.92; }
+  .rumor:last-child { border-bottom: none; }
+  .rumor[hidden] { display: none; }
+  .rumor::before { content: "?"; position: absolute; left: 2px; top: 12px; font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--muted); }
+  .rumor .rt { font-size: 14.5px; font-weight: 700; color: var(--ink-2); }
+  .rumor .rb { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .rumor .rm { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .rumor .rm a { color: var(--muted); }
+  .status-died { border: 1px solid var(--hair-2); padding: 1px 6px; font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+  /* ---- macro list ---- */
+  ol.macro { list-style: none; margin: 0; padding: 0; counter-reset: m; }
+  ol.macro > li {
+    position: relative; counter-increment: m; padding: 12px 0 12px 34px;
+    border-bottom: 1px solid var(--hair); font-size: 14px; line-height: 1.6; text-wrap: pretty;
+  }
+  ol.macro > li::before {
+    content: counter(m, decimal-leading-zero); position: absolute; left: 0; top: 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight: 700;
+  }
+  ol.macro > li:last-child { border-bottom: none; }
+  ol.macro b { color: var(--ink); }
+
+  /* ---- interpretation ---- */
+  .interp { list-style: none; margin: 0; padding: 0; }
+  .interp > li {
+    position: relative; padding: 14px 0 14px 30px; border-bottom: 1px solid var(--hair);
+    font-size: 14.5px; line-height: 1.62; text-wrap: pretty;
+  }
+  .interp > li::before {
+    content: attr(data-i); position: absolute; left: 0; top: 14px;
+    font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--accent);
+  }
+  .interp > li:last-child { border-bottom: none; }
+
+  /* ---- history ---- */
+  details { border: 1px solid var(--hair-2); background: var(--surface); margin-bottom: 8px; }
+  summary { cursor: pointer; padding: 11px 14px; font-family: var(--mono); font-size: 12px; display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 12px; align-items: baseline; }
+  summary::-webkit-details-marker { display: none; }
+  summary .wk { font-weight: 700; color: var(--ink); white-space: nowrap; }
+  summary .tt { color: var(--muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  summary .tot { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  details > div { padding: 0 14px 14px; font-size: 13.5px; color: var(--ink-2); border-top: 1px solid var(--hair); padding-top: 12px; }
+  details ul { margin: 6px 0 0; padding-left: 18px; }
+  details li { margin-bottom: 3px; }
+
+  /* ---- empty state ---- */
+  #empty { border: 1px solid var(--warn); background: var(--surface); padding: 18px; margin: 24px 0 0; }
+  #empty[hidden] { display: none; }
+  #empty h3 { margin: 0 0 8px; font-size: 16px; }
+  #empty p { margin: 0 0 10px; font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+  #empty ul { margin: 0; padding-left: 20px; font-size: 13.5px; color: var(--ink-2); }
+  #empty li { margin-bottom: 4px; }
+  #empty .en { font-family: var(--mono); }
+
+  footer {
+    margin-top: 44px; padding-top: 16px; border-top: 2px solid var(--ink);
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted); line-height: 1.8;
+  }
+  footer b { color: var(--ink-2); }
+
+  @media (max-width: 620px) {
+    .wrap { padding: 0 14px 56px; }
+    .cardtop { grid-template-columns: minmax(0, 1fr); }
+    .impact { text-align: left; }
+    .meter { width: 100%; max-width: 140px; }
+    dl.facts { grid-template-columns: minmax(0, 1fr); gap: 1px 0; }
+    dl.facts dt { padding-top: 8px; }
+    .lbrow { grid-template-columns: minmax(0, 1fr) max-content; }
+    .lbrow .lbtrack { grid-column: 1 / -1; }
+    summary { grid-template-columns: minmax(0, 1fr) max-content; }
+    summary .tt { grid-column: 1 / -1; white-space: normal; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">AI Capital Flow Brief · 주간 · 제1호 (기준선)</p>
+    <h1>자본은 칩이 아니라 <span style="color:var(--accent)">실행 소프트웨어</span>로 갔다</h1>
+    <p class="lede">
+      이번 회차 신규 확정 자본의 68%가 NPU 실리콘이 아니라 <b>NPU/LLM용 시스템 소프트웨어</b>로 들어갔고,
+      그 정점에서 Qualcomm이 Chris Lattner의 컴파일러·런타임 스택(Modular)을 39억 달러에 사들여 7/29 클로징했다.
+    </p>
+    <p class="windows">
+      수집 창 &nbsp;<b>W8</b> 2026-07-23 ~ 07-31 (정규 8일) &nbsp;·&nbsp; <b>W4</b> 2026-07-01 ~ 07-22 (첫 회차 기준선 확장)
+      &nbsp;·&nbsp; 7월 이전 항목은 확정 딜로 게재하지 않고 맥락 인용에만 사용
+    </p>
+
+    <div class="chipbar" id="chipbar">
+      <button class="chip" data-filter="new" aria-pressed="false"><span class="k">신규 확정 딜</span><span class="v" data-count="new">0</span></button>
+      <button class="chip static" tabindex="-1" aria-disabled="true"><span class="k">신규 딜 총액</span><span class="v" id="totalv">$0M</span></button>
+      <button class="chip" data-filter="strategic" aria-pressed="false"><span class="k">전략적 투자자</span><span class="v" data-count="strategic">0</span></button>
+      <button class="chip" data-filter="syssw" aria-pressed="false"><span class="k">System SW</span><span class="v" data-count="syssw">0</span></button>
+      <button class="chip" data-filter="update" aria-pressed="false"><span class="k">갱신 재보고</span><span class="v" data-count="update">0</span></button>
+      <button class="chip" data-filter="rumor" aria-pressed="false"><span class="k">루머 (미확정)</span><span class="v" data-count="rumor">0</span></button>
+      <button class="chip" data-filter="suppressed" aria-pressed="false"><span class="k">중복 생략</span><span class="v" data-count="suppressed">0</span></button>
+      <button class="chip static" tabindex="-1" aria-disabled="true"><span class="k">검토 소스</span><span class="v">22</span></button>
+      <button class="reset" id="reset" hidden>전체 보기 (Esc)</button>
+    </div>
+    <p class="filterbanner" id="banner" hidden></p>
+  </header>
+
+  <!-- ============ EXEC SUMMARY ============ -->
+  <section data-narrative>
+    <h2>임원 요약</h2>
+    <ul class="bullets">
+      <li>
+        <strong>[W8] Qualcomm이 Modular 인수를 7/29 완료($3.9B 전액 주식).</strong>
+        Mojo 언어와 MAX 런타임, 그리고 LLVM·Swift·MLIR의 Chris Lattner를 통째로 확보했다. Lattner는
+        Qualcomm EVP(Advanced AI Software and Platforms)로 부임. 인수된 스택은 CPU·GPU·<b>NPU</b>·커스텀 실리콘을 모두 타깃한다.
+        즉 경쟁사가 우리 ENN 툴체인이 하는 일을 하드웨어 중립 상용 제품으로 보유하게 됐다.
+        <span class="act">→ 최우선 경합. Mojo/MAX의 NPU 백엔드 개방 범위를 90일 내 기술 실사.</span>
+      </li>
+      <li>
+        <strong>[W8] Multiverse Computing이 Series C $570M을 밸류 $1.7B(pre-money)에 조달(7/28).</strong>
+        텐서 네트워크 기반 모델 압축(CompactifAI, 80-95% 축소 주장)으로 스마트폰·PC 엣지 실행을 겨냥한다.
+        경량화 툴체인 단독 기업이 5억 달러대를 받은 첫 사례이며 HP Inc.가 전략적 투자자로 참여했다.
+        우리 경량화 조직과 정면으로 겹치는 영역이다.
+      </li>
+      <li>
+        <strong>[W4] 자본은 칩이 아니라 추론 실행 계층에 쏠렸다.</strong>
+        Fireworks AI $1.5B(밸류 $17.5B, NVIDIA 참여), Together AI $800M(밸류 $8.3B post, Aramco Ventures 리드 + NVIDIA·Pegatron),
+        Ollama $65M(로컬 실행 런타임). 시스템 SW 지분 조달 합계 $2,950M 대 NPU 실리콘 $1,300M.
+      </li>
+      <li>
+        <strong>[W8] 삼성 계열의 확정 신규 투자는 이번 회차 0건이다.</strong>
+        감시 명단 6개 삼성 주체 모두 신규 발표 없음. Mistral AI에 EUR 10억 규모 투자 협상 보도가 있으나
+        이는 미확정 루머로 분류했다. 같은 창에서 SK hynix는 Etched Series C에 참여해 추론 ASIC에 직접 발을 담갔다.
+      </li>
+      <li>
+        <strong>[W4] 온디바이스 실행권을 사려는 인수 시장이 열렸다.</strong>
+        Apple이 AI 칩 스타트업 인수를 물색 중이라는 보도(7/15)와 PrismML 접촉 보도(7/10)가 같은 주에 나왔다.
+        둘 다 미확정이나, Qualcomm-Modular 클로징과 겹쳐 읽으면 온디바이스 실행 스택은 이제 자체 개발이 아니라 매입 대상이다.
+        <span class="act">→ 국내 경량화·런타임 자산에 대한 선제 접촉 가치 상승.</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ ALLOCATION BARS ============ -->
+  <section data-narrative>
+    <h2>분야별 자본 배분 · 이번 회차</h2>
+    <p class="subhead">신규 확정 딜 기준. 지분 조달과 인수 대가는 성질이 다른 자본이므로 <b>분리해 표시</b>한다. 값은 막대에 직접 표기.</p>
+    <figure>
+      <div class="bars">
+        <div class="barrow">
+          <div class="barhead"><span class="lbl">System Software</span><span class="meta num">지분 · 5개 딜 · 68%</span></div>
+          <div class="track"><div class="fill c1" style="width:75.6%"><span class="val">$2,950M</span></div></div>
+        </div>
+        <div class="barrow">
+          <div class="barhead"><span class="lbl">NPU · 실리콘</span><span class="meta num">지분 · 2개 딜 · 30%</span></div>
+          <div class="track"><div class="fill c2" style="width:33.3%"><span class="val">$1,300M</span></div></div>
+        </div>
+        <div class="barrow">
+          <div class="barhead"><span class="lbl">인프라 · 메모리</span><span class="meta num">지분 · 1개 딜 · 1.4%</span></div>
+          <div class="track"><div class="fill c3" style="width:1.6%"><span class="val outside">$61M</span></div></div>
+        </div>
+        <div class="barrow">
+          <div class="barhead"><span class="lbl">LLM 모델 / 엣지 디바이스 / 데이터 툴링</span><span class="meta num">지분 · 0개 딜</span></div>
+          <div class="track"><div class="fill" style="width:0%"><span class="val outside">$0M &nbsp;<span style="color:var(--muted)">- 게재 임계 통과 딜 없음</span></span></div></div>
+        </div>
+        <div class="barrow" style="border-top:1px solid var(--hair-2); margin-top:6px; padding-top:14px">
+          <div class="barhead"><span class="lbl">인수 대가 (M&amp;A · 별도 집계)</span><span class="meta num">1개 딜 · System SW 대상</span></div>
+          <div class="track"><div class="fill cg" style="width:100%"><span class="val">$3,900M &nbsp;Qualcomm ← Modular</span></div></div>
+        </div>
+      </div>
+      <figcaption>
+        지분 조달 합계 $4,311M. 인수 대가까지 포함하면 System Software 비중은 83%로 올라간다.
+        ※ 첫 회차 4주 표본이므로 이것은 추세가 아니라 스냅샷이다 - 추세 판정은 4회차 누적 이후 가능하다.
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ HOT DEALS ============ -->
+  <section id="sec-hot">
+    <h2>핫 딜 · impact 60 이상</h2>
+    <p class="subhead">impact 배점: 라운드 규모 25 · 밸류 점프 15 · 전략적 투자자 20 · DX 인접성 25 · 시장 신호성 15 (watchlist §5)</p>
+    <div class="cards">
+
+      <article class="card" data-key="multiverse-c" data-tags="new hot strategic syssw" data-amount="570">
+        <div class="cardtop">
+          <h3>Multiverse Computing<span class="sub">Series C · $570M · 2026-07-28 · W8</span></h3>
+          <div class="impact"><span class="n">88</span><span class="of">impact / 100</span><span class="meter"><i style="width:88%"></i></span></div>
+        </div>
+        <div class="tags">
+          <span class="tag cat1">System SW · 양자화·압축 툴체인</span>
+          <span class="tag">스페인 · 2019</span>
+          <span class="tag strat">전략적 HP Inc.</span>
+          <span class="tag state">NEW</span>
+        </div>
+        <dl class="facts">
+          <dt>라운드</dt><dd><span class="num">$570M</span>, 밸류 <span class="num">$1.7B (pre-money)</span> · 직전 Series B($215M, 2025-06) 대비 보도상 약 5배 step-up / 약 13개월 <span style="color:var(--muted)">(※직전 밸류 절대값 1차 출처 미확인 - 배수는 보도 기준)</span></dd>
+          <dt>투자자</dt><dd>리드 = Forgepoint Capital International, BNPP SIVF, Bullhound Capital(공동). 참여 = Santander Alternative Investments, Tikehau Capital, <b>HP Inc.</b>, Orange Ventures, Scania Invest, NAventures 외 6개사</dd>
+          <dt>트랙션</dt><dd>공개 고객 Allianz, Bank of Canada, <b>Bosch</b>, Iberdrola, Indra, PwC, Telefonica. 독립 검증 벤치마크는 미확인</dd>
+          <dt>누적 조달</dt><dd><span class="num">$785M</span> (원장 기준)</dd>
+        </dl>
+        <div class="prose">
+          <p><b>무엇을 만드는가</b> - CompactifAI. 양자물리에서 온 텐서 네트워크 분해로 LLM 가중치를 압축한다. 정확도 손실을 최소화하며 모델 크기 80-95% 축소를 주장하고, 클라우드 연결 없이 스마트폰·PC·공장 설비에서 직접 실행하는 것을 목표 배포처로 명시한다. 순수 후처리 양자화(PTQ)가 아닌 구조적 저랭크 분해 계열이므로 기존 INT4/INT8 파이프라인과는 다른 축이다.</p>
+          <p><b>DX 시사점 · <span class="verdict">경합</span></b> - 우리 경량화 조직의 핵심 산출물(온디바이스 모델 압축)을 외부 상용 툴로 판매하는 회사가 5억 달러대 실탄을 확보했다. Bosch가 고객, HP가 투자자라는 구성은 이미 디바이스 제조사 채널로 진입 중임을 뜻한다. Galaxy·AI PC 경로에서 사내 툴체인으로 대응할지 라이선스 평가를 할지 결정이 필요하다.</p>
+          <p><b>impact 근거</b> - 규모 25(+$500M) · 밸류점프 15(약 5배/13개월, 보도 기준) · 전략적 11(HP 참여) · DX 인접성 25(온디바이스 경량화 직결) · 시장 신호성 12(경량화가 단독 대형 카테고리로 성립)</p>
+        </div>
+        <p class="src">출처 · <a href="https://siliconangle.com/2026/07/28/ai-model-compression-startup-multiverse-raises-570m-1-7b-valuation/">SiliconANGLE</a> · <a href="https://techcrunch.com/2026/03/19/multiverse-computing-pushes-its-compressed-ai-models-into-the-mainstream/">TechCrunch</a></p>
+      </article>
+
+      <article class="card" data-key="qualcomm-modular" data-tags="new hot strategic syssw ma" data-amount="3900">
+        <div class="cardtop">
+          <h3>Qualcomm ← Modular<span class="sub">인수 완료 · $3.9B 전액 주식 · 클로징 2026-07-29 · W8</span></h3>
+          <div class="impact"><span class="n">87</span><span class="of">impact / 100</span><span class="meter"><i style="width:87%"></i></span></div>
+        </div>
+        <div class="tags">
+          <span class="tag cat1">System SW · 컴파일러 + 런타임</span>
+          <span class="tag">미국 · 2022</span>
+          <span class="tag strat">전략적 Qualcomm (인수 주체)</span>
+          <span class="tag state">NEW</span>
+        </div>
+        <dl class="facts">
+          <dt>거래</dt><dd>발표 2026-06-24 · <b>클로징 2026-07-29</b> · 대가 약 <span class="num">$3.9B</span> 전액 주식 · 인력 약 150명</dd>
+          <dt>인재</dt><dd>Chris Lattner(LLVM 설계자, Swift 창시자, MLIR 원저자) → Qualcomm EVP, Advanced AI Software and Platforms. 공동창업자 Tim Davis 합류</dd>
+          <dt>제품 존속</dt><dd>Mojo · MAX · Modular Cloud 3개 브랜드 유지, 투자 확대 명시</dd>
+          <dt>지원 HW</dt><dd>CPU · GPU · <b>NPU</b> · 커스텀 실리콘. "개방형 이종(heterogeneous) 생태계" 유지 선언</dd>
+        </dl>
+        <div class="prose">
+          <p><b>무엇을 만드는가</b> - Mojo는 추론 코드를 한 번 쓰면 NVIDIA·AMD·Intel·Qualcomm·Apple Silicon에서 하드웨어별 재작성 없이 최적 실행되게 하는 언어다. MAX는 모델 실행을 하드웨어에 매핑하는 런타임 프레임워크. Qualcomm CEO는 "엣지에서 클라우드까지"를 대상으로 언급했으나 Snapdragon 특정 로드맵은 공식 발표에 없다.</p>
+          <p><b>DX 시사점 · <span class="verdict">최우선 경합</span></b> - 이 거래의 본질은 칩이 아니라 컴파일러 IR 계층의 소유권이다. Qualcomm은 이제 (a) Hexagon NPU, (b) MLIR 원저자, (c) 하드웨어 중립을 표방하는 상용 런타임을 동시에 보유한다. Exynos/ENN이 자체 SDK로 개발자를 붙잡는 구도에서 경쟁사는 "우리 칩에도 남의 칩에도 돌아간다"는 상위 계층을 무기로 쓴다. 참고로 Qualcomm은 Tenstorrent 인수($8-10B 규모 보도)를 성사시키지 못했고 대신 실리콘이 아닌 소프트웨어를 샀다 - 어느 계층이 병목인지에 대한 그들의 판단이 여기 드러난다.</p>
+          <p><b>impact 근거</b> - 규모 25($3.9B) · 밸류점프 5(인수, 배수 해당 없음) · 전략적 17(반도체 대기업 100% 인수) · DX 인접성 25(컴파일러·런타임 직결) · 시장 신호성 15(하드웨어 업체가 컴파일러 계층을 전략 자산으로 매입하는 새 패턴)</p>
+        </div>
+        <p class="src">출처 · <a href="https://www.modular.com/blog/qualcomm-completes-acquisition-of-modular">Modular 공식</a> · <a href="https://www.hpcwire.com/aiwire/2026/07/29/qualcomm-completes-acquisition-of-modular/">AIwire</a> · <a href="https://www.networkworld.com/article/4189098/qualcomms-3-9-billion-purchase-of-modular-aims-to-change-the-data-center-dynamic.html">Network World</a></p>
+      </article>
+
+      <article class="card" data-key="together-c" data-tags="new hot strategic syssw" data-amount="800">
+        <div class="cardtop">
+          <h3>Together AI<span class="sub">Series C · $800M · 2026-07-01 · W4</span></h3>
+          <div class="impact"><span class="n">69</span><span class="of">impact / 100</span><span class="meter"><i style="width:69%"></i></span></div>
+        </div>
+        <div class="tags">
+          <span class="tag cat1">System SW · 추론 서빙·클라우드</span>
+          <span class="tag">미국 · 2022</span>
+          <span class="tag strat">전략적 NVIDIA · Pegatron</span>
+          <span class="tag state">NEW</span>
+        </div>
+        <dl class="facts">
+          <dt>라운드</dt><dd><span class="num">$800M</span>, 밸류 <span class="num">$8.3B (post-money)</span> · 직전 Series B($305M, 밸류 $3.3B) 대비 <b>2.5배 / 약 16개월</b></dd>
+          <dt>투자자</dt><dd>리드 = Aramco Ventures(국부·정책 자본). 참여 = Vista Equity Partners, General Catalyst, Emergence Capital, <b>NVIDIA</b>, March Capital, <b>Pegatron</b>, S Ventures(SentinelOne)</dd>
+          <dt>트랙션</dt><dd>발표문상 오픈소스 추론 수요 3배 증가. 구체 고객명·매출 수치는 1차 출처 미공개</dd>
+          <dt>누적 조달</dt><dd><span class="num">$1,105M</span> (원장 기준)</dd>
+        </dl>
+        <div class="prose">
+          <p><b>무엇을 만드는가</b> - 오픈웨이트 모델의 학습·추론을 함께 제공하는 GPU 클라우드. 커널 최적화(FlashAttention 계열 기여)와 추론 엔진을 자체 보유해 단순 GPU 임대가 아닌 소프트웨어 마진을 취하는 구조다. 온디바이스가 아닌 서버 측 추론이 주력.</p>
+          <p><b>DX 시사점 · <span class="verdict">간접 보완</span></b> - 온디바이스 직접 함의는 낮다. 다만 Pegatron(디바이스 ODM)과 NVIDIA가 같은 라운드에 들어온 구성은 서버-엣지 하이브리드 추론 제품화를 준비하는 신호로 읽을 수 있다. 하이브리드 오케스트레이션(온디바이스 + 클라우드 분기)에서 우리와 접점이 생길 계층이다.</p>
+          <p><b>impact 근거</b> - 규모 25 · 밸류점프 11(2.5배/16개월) · 전략적 14(NVIDIA 참여) · DX 인접성 10(데이터센터 추론) · 시장 신호성 9</p>
+        </div>
+        <p class="src">출처 · <a href="https://www.businesswire.com/news/home/20260701243402/en/Together-AI-Raises-$800-Million-at-$8.3-Billion-Valuation-to-Make-Frontier-AI-Accessible-to-All">BusinessWire (회사 발표)</a> · <a href="https://techcrunch.com/2026/07/01/neocloud-together-ai-raises-800m-leaps-to-8-3b-valuation/">TechCrunch</a></p>
+      </article>
+
+      <article class="card" data-key="fireworks-d" data-tags="new hot strategic syssw" data-amount="1500">
+        <div class="cardtop">
+          <h3>Fireworks AI<span class="sub">Series D · $1.5B · 2026-07-16 · W4</span></h3>
+          <div class="impact"><span class="n">66</span><span class="of">impact / 100</span><span class="meter"><i style="width:66%"></i></span></div>
+        </div>
+        <div class="tags">
+          <span class="tag cat1">System SW · LLM 서빙</span>
+          <span class="tag">미국 · 2022 · Meta PyTorch 출신</span>
+          <span class="tag strat">전략적 NVIDIA</span>
+          <span class="tag state">NEW</span>
+        </div>
+        <dl class="facts">
+          <dt>라운드</dt><dd><span class="num">$1.5B</span>, 밸류 <span class="num">$17.5B</span> <b style="color:var(--warn-ink)">(pre/post 구분 1차 출처 미명시 - 구분 미확인)</b> · 직전 라운드 대비 배수 <b>미확인</b></dd>
+          <dt>투자자</dt><dd>리드 = Atreides Management, Index Ventures, TCV(공동). 참여 = Evantic, Lightspeed, <b>NVIDIA</b>, Bessemer, Menlo Ventures, Insight Partners, Ontario Teachers' Pension Plan, Lone Pine Capital</dd>
+          <dt>트랙션</dt><dd>연환산 매출 <span class="num">$1B</span> 돌파(회사 발표), 전년 대비 5배. 플랫폼 처리량 일 <span class="num">40조</span> 토큰 초과(직전 15조)</dd>
+          <dt>누적 조달</dt><dd><span class="num">$1,500M</span> (원장 기준. 이전 라운드는 1차 출처 미확인으로 미기록)</dd>
+        </dl>
+        <div class="prose">
+          <p><b>무엇을 만드는가</b> - 오픈웨이트·파인튜닝 모델을 서빙하는 추론 플랫폼. 자체 커널·배치 스케줄링·스펙큘레이티브 디코딩 등 서빙 계층 최적화가 제품의 본체이며, 모델을 만들지 않고 실행만 판다.</p>
+          <p><b>DX 시사점 · <span class="verdict">직접 함의 낮음</span></b> - 서버 측 서빙이 본업이므로 Exynos/ENN 경로와 직접 경합하지 않는다. 이 딜의 가치는 가격표에 있다: "모델을 만들지 않고 실행만 최적화하는 회사"에 $17.5B가 붙었다. 실행 계층의 시장가치를 사내 툴체인 투자 정당화 근거로 쓸 수 있다.</p>
+          <p><b>impact 근거</b> - 규모 25 · 밸류점프 5(직전 배수 미확인) · 전략적 14(NVIDIA 참여) · DX 인접성 10 · 시장 신호성 12(실행 계층 밸류에이션 재평가)</p>
+        </div>
+        <p class="src">출처 · <a href="https://www.otpp.com/en-ca/about-us/news-and-insights/2026/fireworks-raises-a-1-5-billion-series-d-to-lead-the-specialized-intelligence-revolution/">OTPP (투자자 발표)</a> · <a href="https://finance.yahoo.com/technology/ai/articles/fireworks-raises-1-5-billion-130000636.html">Yahoo Finance</a></p>
+      </article>
+
+      <article class="card" data-key="etched-c" data-tags="new hot strategic" data-amount="300">
+        <div class="cardtop">
+          <h3>Etched<span class="sub">Series C · $300M · 2026-07-23 · W8</span></h3>
+          <div class="impact"><span class="n">60</span><span class="of">impact / 100</span><span class="meter"><i style="width:60%"></i></span></div>
+        </div>
+        <div class="tags">
+          <span class="tag cat2">NPU · 실리콘 · 추론 전용 ASIC</span>
+          <span class="tag">미국 산호세 · 2022</span>
+          <span class="tag strat">전략적 SK hynix</span>
+          <span class="tag state">NEW</span>
+        </div>
+        <dl class="facts">
+          <dt>라운드</dt><dd><span class="num">$300M</span>, 밸류 <span class="num">$10.3B (post-money)</span> · 직전 Series B($500M, 2025-12) 대비 배수 <b>미확인</b>(직전 밸류 1차 출처 미공개)</dd>
+          <dt>투자자</dt><dd>리드 = Sequoia Capital. 참여 = Andreessen Horowitz, <b>SK hynix</b>, Jane Street, Diffusion Capital. 기존 주주 Peter Thiel, Andrej Karpathy, Dylan Field</dd>
+          <dt>트랙션</dt><dd>수주 잔고 <span class="num">$1B</span>(회사 주장) · TSMC 파운드리 · 2MW 자체 DC + 밀피타스 10MW 시설 개소 · 독립 공개 벤치마크 미확인</dd>
+          <dt>누적 조달</dt><dd><span class="num">$800M</span> (원장 기준)</dd>
+        </dl>
+        <div class="prose">
+          <p><b>무엇을 만드는가</b> - 프론티어 모델 추론 전용 ASIC. 핵심은 두 갈래다: ① 경쟁 대비 크게 낮은 전압에서 동작하는 prefill 전용 칩, ② 다수 칩이 메모리 풀을 저지연 공유하는 decode 메모리·인터커넥트 서브시스템. 즉 prefill/decode를 물리적으로 분리(disaggregation)해 각 단계에 다른 실리콘을 붙이는 구조다. 조 단위 파라미터 sparse MoE를 서멀 스로틀링 없이 피크 FLOPs 80% 이상으로 돌린다고 주장.</p>
+          <p><b>DX 시사점 · <span class="verdict">직접 경합 없음 (데이터센터 전용)</span></b> - 온디바이스 함의는 낮다. 그러나 두 가지가 유효하다: ① prefill/decode 분리 아키텍처가 자본 시장의 승인을 받았다 - 이 구조는 온디바이스 하이브리드(prefill 서버, decode 단말)에도 그대로 대응된다. ② SK hynix가 GPU 대안 ASIC에 지분으로 참여했다 - HBM 공급사가 특정 ASIC 진영에 정렬되기 시작했다는 뜻이고 메모리 조달 관점의 함의가 있다.</p>
+          <p><b>impact 근거</b> - 규모 20($200-500M) · 밸류점프 5(직전 밸류 미확인) · 전략적 13(SK hynix 참여, 리드 아님) · DX 인접성 10 · 시장 신호성 12(HBM 공급사의 ASIC 진영 정렬 = 섹터 전환 신호)</p>
+        </div>
+        <p class="src">출처 · <a href="https://techcrunch.com/2026/07/23/ai-chip-startup-etched-defies-skeptics-hits-10-3b-valuation-from-big-name-investors/">TechCrunch</a> · <a href="https://semiengineering.com/startup-funding-q2-2026/">Semiconductor Engineering</a></p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ OTHER CONFIRMED ============ -->
+  <section id="sec-table">
+    <h2>그 외 확정 딜 · impact 40-59</h2>
+    <p class="subhead">System Software 분야와 삼성 계열 참여 딜은 <b>35점까지</b> 표에 게재한다(watchlist §0 예외 규정).</p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>회사</th><th>분야</th><th>라운드</th><th class="n">금액</th><th class="n">밸류</th>
+            <th>리드</th><th>전략적</th><th class="n">창</th><th class="n">impact</th><th>출처</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-key="ollama-b" data-tags="new deal syssw" data-amount="65">
+            <td class="name"><span class="dot c1"></span>Ollama</td>
+            <td>System SW · 로컬 런타임</td><td>Series B</td>
+            <td class="n">$65M</td><td class="n zero">미공개</td>
+            <td>Theory Ventures</td><td class="zero">없음</td><td class="n">W4 · 7/9</td><td class="n">57</td>
+            <td><a href="https://techcrunch.com/2026/07/09/popular-open-source-ai-developer-tool-ollama-raises-65m-grows-to-nearly-9m-users/">TechCrunch</a></td>
+          </tr>
+          <tr data-key="sambanova-f" data-tags="new deal" data-amount="1000">
+            <td class="name"><span class="dot c2"></span>SambaNova</td>
+            <td>NPU · 실리콘</td><td>Series F (1차 클로징)</td>
+            <td class="n">$1,000M</td><td class="n">$11B <span class="zero">(구분 미확인)</span></td>
+            <td>General Atlantic</td><td class="zero">없음</td><td class="n">W4 · 7/8</td><td class="n">48</td>
+            <td><a href="https://techcrunch.com/2026/07/08/sambanova-draws-1b-at-11b-valuation-in-series-f-first-close/">TechCrunch</a></td>
+          </tr>
+          <tr data-key="infinity-seed" data-tags="new deal syssw" data-amount="15">
+            <td class="name"><span class="dot c1"></span>Infinity</td>
+            <td>System SW · 커널 생성·컴파일</td><td>Seed</td>
+            <td class="n">$15M</td><td class="n">$100M (post)</td>
+            <td>Touring Capital</td><td class="zero">없음 (칩 기업 임원 엔젤)</td><td class="n">W4 · 7/20</td><td class="n">48</td>
+            <td><a href="https://techcrunch.com/2026/07/20/inference-startup-infinity-raises-15m-from-touring-capital-openai-and-athropic-researchers/">TechCrunch</a></td>
+          </tr>
+          <tr data-key="dnotitia-a" data-tags="new deal" data-amount="61.2">
+            <td class="name"><span class="dot c3"></span>Dnotitia (디노티시아)</td>
+            <td>인프라·메모리 / NPU</td><td>Series A</td>
+            <td class="n">$61.2M<br><span class="zero">약 900억원</span></td><td class="n zero">미공개</td>
+            <td>Elohim Partners</td><td class="zero">없음</td><td class="n">W4 · 7/13</td><td class="n">42</td>
+            <td><a href="https://startuprise.org/dnotitia-raises-61-2-million-in-series-a-round-led-by-elohim-partners/">StartupRise</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="subhead" style="margin-top:14px">
+      <b>Ollama</b> - 총 조달 $88M. 개발자 월간 활성 890만명, 팀 14명, Fortune 500의 85% 사용(회사 발표). Benchmark·8VC·Y Combinator 참여.
+      창업자 Jeff Morgan·Michael Chiang은 Docker Desktop 출신. 로컬 실행 런타임이 상용 자본을 받은 사실상 첫 대형 사례이며,
+      impact 57은 규모와 밸류 미공개 때문에 눌린 값이다 - <b>DX 인접성 단독 점수는 25/25 만점</b>이다.<br>
+      <b>SambaNova</b> - 1차 클로징이며 추가 투자자 합류 예정. SN50 2026년 하반기 출하, SoftBank가 첫 배포 파트너. 라운드 확대 클로징 발표 시 UPDATE 대상.<br>
+      <b>Infinity</b> - $15M은 실리콘 스타트업에는 테이프아웃 한 번 값도 안 되지만 <b>26명 커널 엔지니어링 조직에는 3-4년치 런웨이</b>다.
+      자율 에이전트 Ignition이 신규 칩용 저수준 커널을 자동 작성한다. d-Matrix 사례에서 수개월-수년 작업을 수 시간-수일로 단축 주장. 과금은 라이선스가 아니라 성능 개선분(tokens/sec) 배분.<br>
+      <b>Dnotitia</b> - 한국(서울, 2023년 설립). Seahorse(벡터 DB) + VDPU(벡터 데이터 처리 유닛, 세계 최초 주장). 국내 AI 반도체 중 드물게 메모리·데이터 경로를 노린다. Morgan Stanley 주관 IPO 준비 보도.
+    </p>
+  </section>
+
+  <!-- ============ SYS SOFTWARE ============ -->
+  <section id="sec-syssw">
+    <h2>System Software for NPU/LLM 집중 &nbsp;★ 최우선 관심축</h2>
+    <p class="subhead">이번 회차 이 축은 <b>비어 있지 않고, 오히려 지배했다.</b> 라운드 규모가 작아 다른 섹션에서 묻히므로 따로 모아 본다.</p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>회사</th><th>스택 위치</th><th>지원 하드웨어</th><th>라운드 · 금액</th><th class="n">창</th><th>출처</th></tr>
+        </thead>
+        <tbody>
+          <tr data-key="qualcomm-modular" data-tags="new syssw strategic ma" data-amount="3900">
+            <td class="name">Modular → Qualcomm</td>
+            <td>컴파일러 + 런타임 (Mojo / MAX)</td>
+            <td>CPU · GPU · <b>NPU</b> · 커스텀 실리콘</td>
+            <td class="n">인수 $3,900M</td><td class="n">W8 · 7/29</td>
+            <td><a href="https://www.modular.com/blog/qualcomm-completes-acquisition-of-modular">Modular</a></td>
+          </tr>
+          <tr data-key="multiverse-c" data-tags="new syssw strategic" data-amount="570">
+            <td class="name">Multiverse Computing</td>
+            <td>양자화 · 압축 툴체인 (CompactifAI)</td>
+            <td>스마트폰 · PC · 산업 설비 (엣지)</td>
+            <td class="n">Series C $570M</td><td class="n">W8 · 7/28</td>
+            <td><a href="https://siliconangle.com/2026/07/28/ai-model-compression-startup-multiverse-raises-570m-1-7b-valuation/">SiliconANGLE</a></td>
+          </tr>
+          <tr data-key="fireworks-d" data-tags="new syssw strategic" data-amount="1500">
+            <td class="name">Fireworks AI</td>
+            <td>서빙 (추론 플랫폼)</td>
+            <td>GPU 중심</td>
+            <td class="n">Series D $1,500M</td><td class="n">W4 · 7/16</td>
+            <td><a href="https://finance.yahoo.com/technology/ai/articles/fireworks-raises-1-5-billion-130000636.html">Yahoo</a></td>
+          </tr>
+          <tr data-key="together-c" data-tags="new syssw strategic" data-amount="800">
+            <td class="name">Together AI</td>
+            <td>서빙 + 추론 클라우드</td>
+            <td>GPU</td>
+            <td class="n">Series C $800M</td><td class="n">W4 · 7/1</td>
+            <td><a href="https://www.businesswire.com/news/home/20260701243402/en/Together-AI-Raises-$800-Million-at-$8.3-Billion-Valuation-to-Make-Frontier-AI-Accessible-to-All">BusinessWire</a></td>
+          </tr>
+          <tr data-key="ollama-b" data-tags="new syssw" data-amount="65">
+            <td class="name">Ollama</td>
+            <td>로컬 런타임 · 모델 배포</td>
+            <td>Mac · Windows · Linux (CPU+GPU 로컬)</td>
+            <td class="n">Series B $65M</td><td class="n">W4 · 7/9</td>
+            <td><a href="https://techcrunch.com/2026/07/09/popular-open-source-ai-developer-tool-ollama-raises-65m-grows-to-nearly-9m-users/">TechCrunch</a></td>
+          </tr>
+          <tr data-key="infinity-seed" data-tags="new syssw" data-amount="15">
+            <td class="name">Infinity</td>
+            <td>커널 생성 · 컴파일 (CUDA 대안)</td>
+            <td>SRAM 계열 · GPU · <b>폰 칩</b> · 시스톨릭 어레이</td>
+            <td class="n">Seed $15M</td><td class="n">W4 · 7/20</td>
+            <td><a href="https://techcrunch.com/2026/07/20/inference-startup-infinity-raises-15m-from-touring-capital-openai-and-athropic-researchers/">TechCrunch</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="subhead" style="margin-top:14px">
+      <b>한 줄 해석</b> - 자본은 스택의 <b>양 끝</b>에 몰렸다: 최하단(커널·컴파일러 - Modular $3.9B, Infinity $15M)과
+      최상단(서빙 플랫폼 - Fireworks $1.5B, Together $800M). 중간 계층인 그래프 최적화·양자화 툴체인은 Multiverse($570M) 한 곳이 독점적으로 흡수했다.
+      우리 툴체인이 만나는 지점은 정확히 그 셋 모두다 - ENN 컴파일러는 Modular와, 경량화 파이프라인은 Multiverse와, 온디바이스 실행기는 Ollama와 같은 문제를 푼다.
+      가장 위험한 조합은 <b>Qualcomm이 하드웨어 중립 컴파일러를 소유한 상태</b>이며, 이는 개발자가 Exynos용 코드를 별도로 쓰지 않게 만드는 방향으로 작동한다.
+      이번 회차 지분 조달 합계 $2,950M(인수 $3,900M 별도) 대 NPU 실리콘 $1,300M, 라운드 개수 5:2.
+    </p>
+  </section>
+
+  <!-- ============ MATRIX ============ -->
+  <section data-narrative>
+    <h2>전략적 투자자 × 기술 분야 매트릭스</h2>
+    <p class="subhead">셀 = 이번 회차 투자(또는 인수) 건수. <b>빈 칸이 정보다</b> - 어느 대기업이 어느 계층에 베팅했고 어디를 비워뒀는지 본다.</p>
+    <div class="scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="text-align:left">투자 주체</th>
+            <th>LLM 모델</th><th>NPU · 실리콘</th><th>System SW</th><th>엣지 디바이스</th><th>인프라 · 메모리</th>
+            <th style="text-align:left">비고</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="gap-row">
+            <th class="rowh">삼성 계열 ★</th>
+            <td class="empty">0</td><td class="empty">0</td><td class="empty">0</td><td class="empty">0</td><td class="empty">0</td>
+            <td style="text-align:left"><span class="flag">! 전 분야 공백 · 확정 0건</span></td>
+          </tr>
+          <tr>
+            <th class="rowh">SK hynix</th>
+            <td class="empty">0</td><td class="hit">1</td><td class="empty">0</td><td class="empty">0</td><td class="empty">0</td>
+            <td style="text-align:left">Etched Series C 참여</td>
+          </tr>
+          <tr>
+            <th class="rowh">NVIDIA</th>
+            <td class="empty">0</td><td class="empty">0</td><td class="hit">2</td><td class="empty">0</td><td class="empty">0</td>
+            <td style="text-align:left">Fireworks D · Together C</td>
+          </tr>
+          <tr>
+            <th class="rowh">Qualcomm</th>
+            <td class="empty">0</td><td class="empty">0</td><td class="hit">1</td><td class="empty">0</td><td class="empty">0</td>
+            <td style="text-align:left">Modular 100% 인수 ($3.9B)</td>
+          </tr>
+          <tr>
+            <th class="rowh">HP Inc.</th>
+            <td class="empty">0</td><td class="empty">0</td><td class="hit">1</td><td class="empty">0</td><td class="empty">0</td>
+            <td style="text-align:left">Multiverse Series C 참여</td>
+          </tr>
+          <tr>
+            <th class="rowh">Pegatron</th>
+            <td class="empty">0</td><td class="empty">0</td><td class="hit">1</td><td class="empty">0</td><td class="empty">0</td>
+            <td style="text-align:left">Together C 참여 (디바이스 ODM)</td>
+          </tr>
+          <tr>
+            <th class="rowh">Aramco Ventures</th>
+            <td class="empty">0</td><td class="empty">0</td><td class="hit">1</td><td class="empty">0</td><td class="empty">0</td>
+            <td style="text-align:left">Together C <b>리드</b> (국부 자본)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="subhead" style="margin-top:14px">
+      System SW 열에 6개 주체가 표식을 남겼다. NPU·실리콘 열에는 SK hynix 하나뿐이다.
+      <b>그리고 삼성 행은 전 분야가 비어 있다</b> - 이는 관측 실패가 아니라 이번 창의 확정 사실이며,
+      삼성의 유일한 관측 활동은 Mistral 투자 협상 보도(루머 섹션)뿐이다.
+      감시 중인 삼성 주체: Samsung Ventures · Samsung Catalyst Fund · Samsung NEXT · Samsung Strategy &amp; Innovation Center · 삼성전자 직접 투자 · 제휴.
+    </p>
+  </section>
+
+  <!-- ============ M&A / CAPEX / SOVEREIGN ============ -->
+  <section id="sec-macro">
+    <h2>M&amp;A · 빅테크 자본지출 · 국가 펀드</h2>
+    <ol class="macro">
+      <li data-key="qualcomm-modular" data-tags="new ma strategic syssw" data-amount="0">
+        <b>Qualcomm ← Modular / 약 $3.9B(전액 주식)</b> / 무엇을 산 것인가: 컴파일러·런타임 기술 + Chris Lattner 포함 인재 약 150명 + 개발자 생태계.
+        2026-06-24 발표, <b>2026-07-29 클로징</b>. 상세는 핫 딜 카드 참조. <span class="zero">(금액은 핫 딜에서 집계되므로 여기서는 중복 합산하지 않는다)</span>
+      </li>
+      <li data-key="onsemi-synaptics" data-tags="macro" data-amount="0">
+        <b>onsemi ← Synaptics / 약 $7B(전액 주식)</b> / 무엇을 산 것인가: 엣지 AI 프로세서 + 무선 연결 + HMI 제품군과 고객.
+        2026-06-25 발표(W4 창 이전 - 맥락 인용), 클로징 목표 2027년 중반. onsemi는 TAM이 약 $30B 확대돼 2030년 약 $243B에 이른다고 제시.
+      </li>
+      <li data-key="bigtech-capex-q2" data-tags="macro" data-amount="0">
+        <b>빅테크 AI capex 가이던스 상향 (7/22 Q2 실적)</b> - Alphabet 2026년 capex를 <span class="num">$180-190B → $195-205B</span>로 상향
+        (구글 클라우드 매출 +82% YoY, 백로그 1분기에 $50B 증가해 $514B). Meta <span class="num">$125-145B</span>, Microsoft 약 <span class="num">$190B</span>(부품가 상승분 약 $25B 포함),
+        Amazon 약 <span class="num">$200B</span>. <b>4사 합계 최대 약 $725B, 2025년 대비 약 +77%.</b>
+      </li>
+      <li data-key="mgx-fund-1" data-tags="macro" data-amount="0">
+        <b>MGX(아부다비) Fund I를 $49B에 클로징 (7/1)</b> - 목표 $45B 초과. 투자 범위에 <b>반도체</b>를 명시.
+        향후 수년간 연 최대 $10B 집행 계획. 현재까지 14개사 투자(Anthropic·OpenAI·xAI 등 모델 계층 중심).
+      </li>
+      <li data-key="general-compute-debt" data-tags="macro" data-amount="0">
+        <b>General Compute, Upper90으로부터 $400M 대출 확보 (7/17)</b> - 추론 클라우드 전용 부채 조달.
+        지분이 아닌 <b>자산담보부 부채로 추론 캐파를 짓는 구조</b>가 확산 중이라는 신호.
+      </li>
+    </ol>
+  </section>
+
+  <!-- ============ RUMORS ============ -->
+  <section id="sec-rumor">
+    <h2>루머 · 협상 단계 (미확정)</h2>
+    <div class="rumorbox">
+      <p class="rumorwarn">[주의] 이 섹션의 항목은 확정 딜이 아니다 - 금액 · 밸류 · 성사 여부 모두 변할 수 있다. 상단 총액 집계에도 포함하지 않았다.</p>
+
+      <div class="rumor" data-key="samsung-mistral-talks" data-tags="rumor" data-amount="0">
+        <div class="rt">삼성전자 → Mistral AI, EUR 10억(약 $1.1B) 투자 협상 &nbsp;<span class="status-died" style="border-color:var(--warn); color:var(--warn-ink)">talks</span></div>
+        <div class="rb">Mistral 밸류 약 EUR 200억 수준에서 논의. 삼성·Mistral 모두 공식 확인 없음. EQT Scaleup Europe Fund, Novo Holdings, Santander도 협상 중으로 보도. ASML이 Mistral 최대 주주. 삼성은 2024년 라운드에서 벤처 부문을 통해 이미 참여한 이력.</div>
+        <div class="rm">최초 관측 2026-07-22 · <a href="https://www.pymnts.com/news/artificial-intelligence/2026/samsung-weighs-1-billion-dollar-investment-ai-firm-mistral/">PYMNTS</a> · <a href="https://www.techtimes.com/articles/321345/20260723/samsung-weighs-1-billion-mistral-stake-dual-chip-ai-sovereignty-play.htm">TechTimes</a></div>
+      </div>
+
+      <div class="rumor" data-key="apple-chip-ma-hunt" data-tags="rumor" data-amount="0">
+        <div class="rt">Apple → AI 칩 스타트업 인수 물색 &nbsp;<span class="status-died" style="border-color:var(--warn); color:var(--warn-ink)">talks</span></div>
+        <div class="rb">뱅커 접촉 및 반도체 스타트업 인수 의향 타진 보도. 서버용 AI 추론 칩 역량 보강 목적(M2 Ultra 서버 칩이 추론 워크로드에 부족). 타깃 미공개, 계약 없음.</div>
+        <div class="rm">최초 관측 2026-07-15 · <a href="https://www.macrumors.com/2026/07/15/apple-looking-to-acquire-ai-chip-companies/">MacRumors</a></div>
+      </div>
+
+      <div class="rumor" data-key="apple-prismml-talks" data-tags="rumor" data-amount="0">
+        <div class="rt">Apple → PrismML 협상 &nbsp;<span class="status-died" style="border-color:var(--warn); color:var(--warn-ink)">talks</span></div>
+        <div class="rb">아이폰에서 대형 모델을 직접 실행하기 위한 압축 기술. PrismML은 메모리 14배 축소·추론 8배 가속·에너지 효율 5배 개선을 주장(회사 수치). 공동창업자에 Caltech 교수 Babak Hassibi. 미확정.</div>
+        <div class="rm">최초 관측 2026-07-10 · <a href="https://qz.com/apple-prismml-ai-models-iphone-071426">Quartz</a> · <a href="https://macdailynews.com/2026/07/10/apple-eyes-prismml-to-run-huge-ai-models-directly-on-iphone/">MacDailyNews</a></div>
+      </div>
+
+      <div class="rumor" data-key="qualcomm-tenstorrent-talks" data-tags="rumor" data-amount="0">
+        <div class="rt">Qualcomm → Tenstorrent $8-10B 인수 협상 &nbsp;<span class="status-died">died · 부인됨</span></div>
+        <div class="rb">6/16 The Information 보도 이후 Tenstorrent CEO Jim Keller가 협상 사실을 부인했다(도쿄 미디어 행사). Qualcomm은 대신 Modular를 인수했다. 원장 상태는 died로 기록.</div>
+        <div class="rm">최초 관측 2026-06-16 · <a href="https://www.theregister.com/systems/2026/06/16/qualcomm-said-to-be-circling-ai-chip-biz-tenstorrent-in-10b-risc-v-power-play/5256084">The Register</a> · <a href="https://finance.yahoo.com/technology/ai/articles/qualcomms-tenstorrent-deal-looks-less-121327676.html">Yahoo Finance</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LEADERBOARD ============ -->
+  <section data-narrative>
+    <h2>누적 조달 리더보드</h2>
+    <p class="subhead">
+      첫 회차이므로 <b>이번에 확인된 라운드만 합산</b>한 값이다 - 각 사의 실제 역대 누적과 다를 수 있고, 회차가 쌓이며 정확도가 올라간다.
+      막대는 원장 누적 조달액. <b>삼성 계열 참여 기업은 별도 표식(★)</b>을 붙이는데, 이번 회차 해당 기업은 <b>0곳</b>이다.
+    </p>
+    <div class="lb">
+      <div class="lbrow"><span class="co">Fireworks AI <em>sys-sw</em></span><span class="lbtrack"><i class="c1" style="width:100%"></i></span><span class="amt">$1,500M</span></div>
+      <div class="lbrow"><span class="co">Together AI <em>sys-sw</em></span><span class="lbtrack"><i class="c1" style="width:73.7%"></i></span><span class="amt">$1,105M</span></div>
+      <div class="lbrow"><span class="co">SambaNova <em>npu</em></span><span class="lbtrack"><i class="c2" style="width:66.7%"></i></span><span class="amt">$1,000M</span></div>
+      <div class="lbrow"><span class="co">Etched <em>npu</em></span><span class="lbtrack"><i class="c2" style="width:53.3%"></i></span><span class="amt">$800M</span></div>
+      <div class="lbrow"><span class="co">Multiverse Computing <em>sys-sw</em></span><span class="lbtrack"><i class="c1" style="width:52.3%"></i></span><span class="amt">$785M</span></div>
+      <div class="lbrow"><span class="co">Ollama <em>sys-sw</em></span><span class="lbtrack"><i class="c1" style="width:4.3%"></i></span><span class="amt">$65M</span></div>
+      <div class="lbrow"><span class="co">Dnotitia <em>infra</em></span><span class="lbtrack"><i class="c3" style="width:4.1%"></i></span><span class="amt">$61M</span></div>
+      <div class="lbrow"><span class="co">Infinity <em>sys-sw</em></span><span class="lbtrack"><i class="c1" style="width:1%"></i></span><span class="amt">$15M</span></div>
+      <div class="lbrow"><span class="co">Modular <em>인수 종결</em></span><span class="lbtrack"><i class="cg" style="width:100%"></i></span><span class="amt">$3,900M 인수가</span></div>
+    </div>
+    <p class="subhead" style="margin-top:12px">최신 밸류: Fireworks $17.5B(구분 미확인) · SambaNova $11B(구분 미확인) · Etched $10.3B(post) · Together $8.3B(post) · Multiverse $1.7B(pre) · Infinity $100M(post) · Ollama·Dnotitia 미공개</p>
+  </section>
+
+  <!-- ============ INTERPRETATION ============ -->
+  <section data-narrative>
+    <h2>자본 배분 해석 · Where the money is going</h2>
+    <ul class="interp">
+      <li data-i="①"><b>실리콘에서 실행 소프트웨어로.</b> 신규 확정 지분 조달 $4,311M 중 System SW가 $2,950M(68%), NPU 실리콘이 $1,300M(30%)이다. 인수 대가($3.9B Modular)까지 넣으면 System SW 비중은 83%. 라운드 개수도 5:2로 소프트웨어가 앞선다. 다만 <b>4주 표본 1회차이므로 추세가 아니라 스냅샷</b>이며, 추세 판정은 4회차 누적 이후 가능하다.</li>
+      <li data-i="②"><b>컴파일러 계층이 "매입 대상"으로 재분류됐다.</b> Qualcomm-Modular($3.9B)는 반도체 기업이 개발자 대면 컴파일러·런타임을 직접 소유하겠다고 선언한 사건이다. 같은 창에서 Apple이 칩 스타트업 인수를 물색하고, AMD는 앞서 Untether AI 팀을 흡수해 컴파일러·커널 역량에 배치했다(2025-06, 맥락 인용). 실리콘 대기업 3사가 모두 소프트웨어·인재 쪽으로 자본을 돌리고 있다.</li>
+      <li data-i="③"><b>온디바이스 경량화가 단독 카테고리가 됐다.</b> Multiverse $570M은 "모델 압축"만으로 5억 달러대를 받은 첫 사례다. 여기에 Apple-PrismML 협상 보도(미확정)와 Ollama의 로컬 실행 런타임 조달이 같은 4주에 겹친다. <b>금액 근거는 아직 딜 3건뿐이므로 표본 부족</b>이지만, 세 딜이 서로 다른 계층(압축·실행·실리콘 협상)에서 동시에 나온 점은 우연으로 보기 어렵다.</li>
+      <li data-i="④"><b>삼성 계열의 침묵은 데이터로 확인된 사실이다.</b> 감시 대상 6개 삼성 투자 주체 전부 이번 창에 신규 발표가 없었고, 같은 창에서 SK hynix(Etched), NVIDIA(Fireworks·Together), HP(Multiverse), Pegatron(Together), Qualcomm(Modular 인수)은 각자 베팅을 마쳤다. System SW 열에 주요 전략적 투자자 6곳이 표식을 남긴 반면 삼성 행은 비어 있다.</li>
+    </ul>
+  </section>
+
+  <!-- ============ SUPPRESSED ============ -->
+  <section id="sec-suppressed">
+    <h2>생략 내역</h2>
+    <p class="subhead" data-key="suppress-none" data-tags="suppressed-note">
+      <b>첫 회차 - 기보고 이력 없음.</b> deal-ledger.json이 빈 초기값이었으므로 중복 억제(SUPPRESS)로 생략한 딜은 <b>0건</b>이다.
+      동일 딜의 복수 보도는 규칙대로 하나로 병합했다: Etched 4개 매체 → 1항목, Multiverse 3개 → 1항목, Qualcomm-Modular 5개 → 1항목, Together AI 4개 → 1항목.
+    </p>
+    <p class="subhead">
+      <b>impact 임계 미달로 게재하지 않은 관측 항목</b> - Luxonis Series A $14M(7/2, 임베디드 비전, impact 35) · Architect Labs Seed $24M(7/13, 칩 검증 EDA, impact 25) · CuspAI Series B $450M(7/28, AI 소재 탐색 - watchlist §7 제외 대상).<br>
+      <b>수집 창 외부 항목</b>(다음 회차부터 창 내 후속 전개 발생 시 정식 등재) - Baseten Series F $1.5B(6/22, 밸류 $13B) · Acrab $350M 누적(6월, 엣지 에이전틱 SoC, 7/23 GELIX 1 발표) · Axelera AI $250M+(2월, <b>Samsung Catalyst Fund 참여</b>) · Normal Computing $50M(3월, <b>Samsung Catalyst 리드</b>) · Rebellions 프리IPO 약 $400M(3월, 밸류 3.4조원) · FuriosaAI 프리IPO 약 8,000억원(5/28, 밸류 약 3조원) · DeepX Series D(6월, 밸류 2.65조원 pre-money).
+    </p>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section data-narrative>
+    <h2>최근 8회차 이력</h2>
+    <p class="subhead">주차별 신규 확정 딜 총액과 핫 딜 제목. 이번이 <b>제1호(기준선)</b>이므로 1개 회차만 있다 - 회차가 쌓이면 추세선으로 읽는다.</p>
+    <details open>
+      <summary>
+        <span class="wk">제1호 · 2026-07-31</span>
+        <span class="tt">자본은 칩이 아니라 실행 소프트웨어로 갔다</span>
+        <span class="tot">$8,211M</span>
+      </summary>
+      <div>
+        신규 확정 딜 9건 (지분 $4,311M + 인수 $3,900M) · 전략적 투자자 참여 5건 · 갱신 0건 · 루머 4건 · 중복 생략 0건(첫 회차)
+        <ul>
+          <li>Multiverse Computing - Series C $570M - impact 88</li>
+          <li>Qualcomm ← Modular - 인수 $3.9B - impact 87</li>
+          <li>Together AI - Series C $800M - impact 69</li>
+          <li>Fireworks AI - Series D $1.5B - impact 66</li>
+          <li>Etched - Series C $300M - impact 60</li>
+        </ul>
+      </div>
+    </details>
+    <details>
+      <summary>
+        <span class="wk">제2호 이후</span>
+        <span class="tt">다음 회차부터 누적 표시됩니다</span>
+        <span class="tot">-</span>
+      </summary>
+      <div>
+        다음 회차에서 우선 확인할 항목: SambaNova Series F 확대 클로징 · 삼성-Mistral 협상 확정 여부 ·
+        Apple 칩 스타트업 인수 대상 공개 · Rebellions·FuriosaAI 코스피 상장예비심사 및 후속 라운드 ·
+        Mojo/MAX의 NPU 백엔드 개방 범위.
+      </div>
+    </details>
+  </section>
+
+  <div id="empty" hidden>
+    <h3 id="empty-h">해당 항목 0건</h3>
+    <p id="empty-p"></p>
+    <ul id="empty-l"></ul>
+  </div>
+
+  <footer>
+    수집 소스 <b>22건</b> 검토 · 신규 확정 딜 <b>9건</b> (지분 $4,311M + 인수 $3,900M = 총 <b>$8,211M</b>) ·
+    갱신 재보고 <b>0건</b> · 루머 <b>4건</b> · 중복 생략 <b>0건</b>(첫 회차)<br>
+    ai-capital-monitor · 감시 정의 capital/config/watchlist.md · 원장 capital/state/deal-ledger.json · 리포트 capital/reports/2026-07-31-ai-capital-brief.md<br>
+    금액은 1차 출처(회사 발표 · 투자자 발표 · 공시) 확인분만 기재. pre/post-money 구분이 불명확한 항목은 "구분 미확인"으로 표기했다.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var items = Array.prototype.slice.call(document.querySelectorAll('[data-tags]'));
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.chip[data-filter]'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section'));
+  var narratives = Array.prototype.slice.call(document.querySelectorAll('[data-narrative]'));
+  var reset = document.getElementById('reset');
+  var banner = document.getElementById('banner');
+  var totalEl = document.getElementById('totalv');
+  var empty = document.getElementById('empty');
+  var active = null;
+
+  function tagsOf(el) { return (el.getAttribute('data-tags') || '').split(/\s+/); }
+  function has(el, t) { return tagsOf(el).indexOf(t) !== -1; }
+
+  // unique deal keys per tag (an item may appear in several sections)
+  function keysFor(tag) {
+    var seen = {};
+    items.forEach(function (el) {
+      if (has(el, tag)) seen[el.getAttribute('data-key')] = true;
+    });
+    return Object.keys(seen);
+  }
+
+  function sumFor(tag) {
+    var seen = {}, total = 0;
+    items.forEach(function (el) {
+      var k = el.getAttribute('data-key');
+      if (!has(el, tag) || seen[k]) return;
+      seen[k] = true;
+      total += parseFloat(el.getAttribute('data-amount') || '0') || 0;
+    });
+    return total;
+  }
+
+  function fmt(n) {
+    return '$' + Math.round(n).toLocaleString('en-US') + 'M';
+  }
+
+  // ---- write badge counts from the DOM, never hardcoded ----
+  chips.forEach(function (c) {
+    var tag = c.getAttribute('data-filter');
+    var el = c.querySelector('[data-count]');
+    if (el) el.textContent = keysFor(tag).length;
+  });
+  totalEl.textContent = fmt(sumFor('new'));
+
+  var messages = {
+    syssw: {
+      h: 'System Software 딜 0건',
+      p: '이 분야는 라운드 규모가 작아 언론 커버리지가 얇다 - 검색 결과 0건이 곧 딜 부재를 뜻하지 않는다. 최근 90일 누적 흐름을 대신 본다.',
+      l: ['Baseten Series F $1.5B (2026-06-22, 밸류 $13B) - 추론 플랫폼', 'Inferact $150M 시드 (2026-01, vLLM 상용화, 밸류 $800M)', 'RadixArk (SGLang 상용화, 2026-01, 밸류 약 $400M)']
+    },
+    strategic: {
+      h: '전략적 투자자 참여 딜 0건',
+      p: '놓친 것이 아니라 조용한 주다. 아래 명단을 이번 회차에 개별 조회했고 신규 발표가 확인되지 않았다.',
+      l: ['삼성 계열: Samsung Ventures · Samsung Catalyst Fund · Samsung NEXT · Samsung S&IC · 삼성전자 직접', '반도체·IP: Qualcomm Ventures · Intel Capital · AMD Ventures · ARM · MediaTek · TSMC · SK hynix · Micron', '플랫폼: NVIDIA/NVentures · Google/GV · Microsoft/M12 · Amazon · Meta · Apple', '디바이스: Sony · LG Technology Ventures · Bosch · Hyundai · Xiaomi · Lenovo Capital']
+    },
+    update: {
+      h: '갱신 재보고 0건',
+      p: '첫 회차이므로 기보고 라운드가 없다 - 갱신 대상 자체가 존재하지 않는다. 다음 회차부터 금액·밸류 정정, 확대 클로징, 전략적 투자자 신규 합류, 자금 용처 공개, 인수 대상 전환이 발생하면 여기에 표시된다.',
+      l: []
+    },
+    suppressed: {
+      h: '중복 생략 0건',
+      p: '첫 회차 - 기보고 이력 없음. deal-ledger.json이 빈 초기값이었으므로 억제한 딜이 없다. 동일 딜의 복수 보도는 하나로 병합했다(Etched 4개 매체, Modular 5개, Together 4개, Multiverse 3개).',
+      l: []
+    },
+    rumor: { h: '루머 0건', p: '이번 회차 미확정 협상 관측이 없다.', l: [] },
+    "new": { h: '신규 확정 딜 0건', p: '이번 창에 게재 임계를 통과한 신규 확정 딜이 없다.', l: [] }
+  };
+
+  function showEmpty(tag) {
+    var m = messages[tag] || { h: '해당 항목 0건', p: '', l: [] };
+    document.getElementById('empty-h').textContent = m.h;
+    document.getElementById('empty-p').textContent = m.p;
+    var ul = document.getElementById('empty-l');
+    ul.innerHTML = '';
+    (m.l || []).forEach(function (t) {
+      var li = document.createElement('li');
+      li.textContent = t;
+      ul.appendChild(li);
+    });
+    empty.hidden = false;
+  }
+
+  function apply(tag) {
+    active = tag;
+
+    items.forEach(function (el) {
+      el.hidden = tag ? !has(el, tag) : false;
+    });
+    narratives.forEach(function (el) {
+      el.hidden = !!tag;
+    });
+
+    sections.forEach(function (sec) {
+      if (sec.hasAttribute('data-narrative')) return;
+      if (!tag) { sec.hidden = false; return; }
+      var own = sec.querySelectorAll('[data-tags]');
+      if (!own.length) { sec.hidden = true; return; }
+      var anyVisible = Array.prototype.some.call(own, function (el) { return !el.hidden; });
+      sec.hidden = !anyVisible;
+    });
+
+    chips.forEach(function (c) {
+      c.setAttribute('aria-pressed', String(c.getAttribute('data-filter') === tag));
+    });
+
+    reset.hidden = !tag;
+    empty.hidden = true;
+
+    if (tag) {
+      var n = keysFor(tag).length;
+      var amt = sumFor(tag);
+      totalEl.textContent = fmt(amt);
+      banner.hidden = false;
+      banner.textContent = '필터 [' + tag + '] 적용 중 · 해당 딜 ' + n + '건 · 합계 ' + fmt(amt) +
+        ' · 서술형 섹션(임원 요약 · 자본 배분 해석 · 리더보드 · 이력)은 숨겨졌다.';
+      if (n === 0) showEmpty(tag);
+    } else {
+      totalEl.textContent = fmt(sumFor('new'));
+      banner.hidden = true;
+      banner.textContent = '';
+    }
+  }
+
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      var tag = c.getAttribute('data-filter');
+      apply(active === tag ? null : tag);
+    });
+  });
+  reset.addEventListener('click', function () { apply(null); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && active) apply(null);
+  });
+})();
+</script>

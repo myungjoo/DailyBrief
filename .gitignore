@@ -1,0 +1,17 @@
+# OS / 에디터
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+
+# Claude Code 로컬 설정 (개인 환경별 권한·환경변수. 공유 대상 아님)
+.claude/settings.local.json
+
+# 임시 파일
+*.tmp
+*.log

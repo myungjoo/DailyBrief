@@ -1,0 +1,452 @@
+{
+  "last_run": "2026-07-31",
+  "schema_note": "cumulative_usd_m 은 rounds[].amount_usd_m 의 합계로만 재계산한다. 첫 회차(2026-07-31)이므로 대부분 기업의 과거 라운드는 1차 출처 확인분만 기록되어 있고, 실제 역대 누적과 다를 수 있다. companies 항목은 절대 삭제하지 않는다.",
+  "companies": [
+    {
+      "key": "multiverse-computing",
+      "name": "Multiverse Computing",
+      "category": "sys-software",
+      "hq": "ES",
+      "founded": 2019,
+      "cumulative_usd_m": 785,
+      "latest_valuation_usd_m": 1700,
+      "rounds": [
+        {
+          "round": "Series B",
+          "amount_usd_m": 215,
+          "valuation_usd_m": null,
+          "valuation_basis": "unconfirmed",
+          "announced": "2025-06",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 0,
+          "lead": "미확인",
+          "strategics": [],
+          "impact_at_last_report": null,
+          "url": "https://siliconangle.com/2026/07/28/ai-model-compression-startup-multiverse-raises-570m-1-7b-valuation/",
+          "note": "Series C 보도에서 확인된 과거 라운드. 창 외부이므로 게재하지 않고 누적 산정에만 사용."
+        },
+        {
+          "round": "Series C",
+          "amount_usd_m": 570,
+          "valuation_usd_m": 1700,
+          "valuation_basis": "pre-money",
+          "announced": "2026-07-28",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "Forgepoint Capital International · BNPP SIVF · Bullhound Capital (공동)",
+          "participants": ["Santander Alternative Investments", "Tikehau Capital", "HP Inc.", "Orange Ventures", "Scania Invest", "NAventures"],
+          "strategics": ["HP Inc."],
+          "samsung_affiliated": false,
+          "window": "W8",
+          "impact_at_last_report": 88,
+          "url": "https://siliconangle.com/2026/07/28/ai-model-compression-startup-multiverse-raises-570m-1-7b-valuation/"
+        }
+      ],
+      "notes": "CompactifAI - 텐서 네트워크 분해 기반 LLM 압축, 모델 크기 80-95% 축소 주장. 스마트폰·PC·산업설비 엣지 실행 타깃. 고객 Allianz·Bank of Canada·Bosch·Iberdrola·Indra·PwC·Telefonica. DX 판정: 경합(온디바이스 경량화 정면 중첩)."
+    },
+    {
+      "key": "modular",
+      "name": "Modular",
+      "category": "sys-software",
+      "hq": "US",
+      "founded": 2022,
+      "status": "acquired",
+      "cumulative_usd_m": 0,
+      "latest_valuation_usd_m": 3900,
+      "rounds": [
+        {
+          "round": "M&A (Qualcomm 인수)",
+          "amount_usd_m": 3900,
+          "amount_note": "인수 대가(전액 주식). 지분 조달이 아니므로 cumulative_usd_m 에 합산하지 않는다.",
+          "valuation_usd_m": 3900,
+          "valuation_basis": "acquisition-consideration",
+          "announced": "2026-06-24",
+          "closed": "2026-07-29",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "Qualcomm",
+          "participants": ["Qualcomm"],
+          "strategics": ["Qualcomm"],
+          "samsung_affiliated": false,
+          "window": "W8",
+          "impact_at_last_report": 87,
+          "url": "https://www.modular.com/blog/qualcomm-completes-acquisition-of-modular"
+        }
+      ],
+      "notes": "Mojo 언어 + MAX 런타임 + Modular Cloud. 창업자 Chris Lattner(LLVM·Swift·MLIR 원저자) → Qualcomm EVP Advanced AI Software and Platforms. 공동창업자 Tim Davis. 인력 약 150명. 지원 HW: CPU·GPU·NPU·커스텀 실리콘. DX 판정: 최우선 경합(컴파일러 IR 계층 소유권)."
+    },
+    {
+      "key": "together-ai",
+      "name": "Together AI",
+      "category": "sys-software",
+      "hq": "US",
+      "founded": 2022,
+      "cumulative_usd_m": 1105,
+      "latest_valuation_usd_m": 8300,
+      "rounds": [
+        {
+          "round": "Series B",
+          "amount_usd_m": 305,
+          "valuation_usd_m": 3300,
+          "valuation_basis": "unconfirmed",
+          "announced": "2025-03",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 0,
+          "lead": "미확인",
+          "strategics": [],
+          "impact_at_last_report": null,
+          "url": "https://techcrunch.com/2026/07/01/neocloud-together-ai-raises-800m-leaps-to-8-3b-valuation/",
+          "note": "Series C 보도에서 확인된 과거 라운드(약 16개월 전). 창 외부."
+        },
+        {
+          "round": "Series C",
+          "amount_usd_m": 800,
+          "valuation_usd_m": 8300,
+          "valuation_basis": "post-money",
+          "announced": "2026-07-01",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "Aramco Ventures",
+          "participants": ["Vista Equity Partners", "General Catalyst", "Emergence Capital", "NVIDIA", "March Capital", "Pegatron", "S Ventures (SentinelOne)"],
+          "strategics": ["NVIDIA", "Pegatron"],
+          "samsung_affiliated": false,
+          "window": "W4",
+          "impact_at_last_report": 69,
+          "url": "https://www.businesswire.com/news/home/20260701243402/en/Together-AI-Raises-$800-Million-at-$8.3-Billion-Valuation-to-Make-Frontier-AI-Accessible-to-All"
+        }
+      ],
+      "notes": "오픈웨이트 학습·추론 GPU 클라우드. 커널 최적화(FlashAttention 계열) 자체 보유. 직전 대비 2.5배/약 16개월. DX 판정: 간접 보완(서버측 추론). Pegatron+NVIDIA 동반 참여는 서버-엣지 하이브리드 신호."
+    },
+    {
+      "key": "fireworks-ai",
+      "name": "Fireworks AI",
+      "category": "sys-software",
+      "hq": "US",
+      "founded": 2022,
+      "cumulative_usd_m": 1500,
+      "latest_valuation_usd_m": 17500,
+      "rounds": [
+        {
+          "round": "Series D",
+          "amount_usd_m": 1500,
+          "valuation_usd_m": 17500,
+          "valuation_basis": "unconfirmed",
+          "announced": "2026-07-16",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "Atreides Management · Index Ventures · TCV (공동)",
+          "participants": ["Evantic", "Lightspeed Venture Partners", "NVIDIA", "Bessemer Venture Partners", "Menlo Ventures", "Insight Partners", "Ontario Teachers' Pension Plan", "Lone Pine Capital"],
+          "strategics": ["NVIDIA"],
+          "samsung_affiliated": false,
+          "window": "W4",
+          "impact_at_last_report": 66,
+          "url": "https://www.otpp.com/en-ca/about-us/news-and-insights/2026/fireworks-raises-a-1-5-billion-series-d-to-lead-the-specialized-intelligence-revolution/",
+          "note": "밸류 $17.5B 의 pre/post 구분이 1차 출처에 미명시. 이전 라운드 금액·밸류 1차 출처 미확인으로 원장 미기록."
+        }
+      ],
+      "notes": "Meta PyTorch 팀 출신 창업. 서빙 계층 최적화(커널·배치 스케줄링·스펙큘레이티브 디코딩). ARR $1B 돌파(전년 5배), 일 40조 토큰(직전 15조). DX 판정: 직접 함의 낮음 - 가격표 근거로만 활용."
+    },
+    {
+      "key": "etched",
+      "name": "Etched",
+      "category": "npu-silicon",
+      "hq": "US",
+      "founded": 2022,
+      "cumulative_usd_m": 800,
+      "latest_valuation_usd_m": 10300,
+      "rounds": [
+        {
+          "round": "Series B",
+          "amount_usd_m": 500,
+          "valuation_usd_m": null,
+          "valuation_basis": "unconfirmed",
+          "announced": "2025-12",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 0,
+          "lead": "미확인",
+          "strategics": [],
+          "impact_at_last_report": null,
+          "url": "https://techcrunch.com/2026/07/23/ai-chip-startup-etched-defies-skeptics-hits-10-3b-valuation-from-big-name-investors/",
+          "note": "Series C 보도에서 확인된 과거 라운드. 창 외부."
+        },
+        {
+          "round": "Series C",
+          "amount_usd_m": 300,
+          "valuation_usd_m": 10300,
+          "valuation_basis": "post-money",
+          "announced": "2026-07-23",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "Sequoia Capital",
+          "participants": ["Andreessen Horowitz", "SK hynix", "Jane Street", "Diffusion Capital"],
+          "strategics": ["SK hynix"],
+          "samsung_affiliated": false,
+          "window": "W8",
+          "impact_at_last_report": 60,
+          "url": "https://techcrunch.com/2026/07/23/ai-chip-startup-etched-defies-skeptics-hits-10-3b-valuation-from-big-name-investors/"
+        }
+      ],
+      "notes": "프론티어 모델 추론 전용 ASIC. prefill 전용 저전압 칩 + decode 공유 메모리·인터커넥트로 prefill/decode 물리 분리. 조 단위 sparse MoE 피크 FLOPs 80%+ 주장. TSMC 파운드리. 수주 잔고 $1B(회사 주장). SK hynix 지분 참여 = HBM 공급사의 ASIC 진영 정렬 신호. DX 판정: 데이터센터 전용, 직접 경합 없음."
+    },
+    {
+      "key": "ollama",
+      "name": "Ollama",
+      "category": "sys-software",
+      "hq": "US",
+      "cumulative_usd_m": 65,
+      "latest_valuation_usd_m": null,
+      "rounds": [
+        {
+          "round": "Series B",
+          "amount_usd_m": 65,
+          "valuation_usd_m": null,
+          "valuation_basis": "undisclosed",
+          "announced": "2026-07-09",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "Theory Ventures",
+          "participants": ["Benchmark", "8VC", "Y Combinator"],
+          "strategics": [],
+          "samsung_affiliated": false,
+          "window": "W4",
+          "impact_at_last_report": 57,
+          "url": "https://techcrunch.com/2026/07/09/popular-open-source-ai-developer-tool-ollama-raises-65m-grows-to-nearly-9m-users/",
+          "note": "회사 발표 총 조달 $88M (이전 라운드 $23M 상당은 1차 출처 미확인으로 원장 미기록)."
+        }
+      ],
+      "notes": "로컬 LLM 실행 런타임(Mac·Windows·Linux). 개발자 MAU 890만, 팀 14명, Fortune 500의 85% 사용(회사 발표). 창업자 Jeff Morgan·Michael Chiang(Docker Desktop 출신). DX 인접성 단독 25/25 - 온디바이스 실행기 직결. 최우선 감시 대상."
+    },
+    {
+      "key": "sambanova",
+      "name": "SambaNova Systems",
+      "category": "npu-silicon",
+      "hq": "US",
+      "cumulative_usd_m": 1000,
+      "latest_valuation_usd_m": 11000,
+      "rounds": [
+        {
+          "round": "Series F (1차 클로징)",
+          "amount_usd_m": 1000,
+          "valuation_usd_m": 11000,
+          "valuation_basis": "unconfirmed",
+          "announced": "2026-07-08",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "General Atlantic",
+          "participants": [],
+          "strategics": [],
+          "samsung_affiliated": false,
+          "window": "W4",
+          "impact_at_last_report": 48,
+          "url": "https://techcrunch.com/2026/07/08/sambanova-draws-1b-at-11b-valuation-in-series-f-first-close/",
+          "note": "1차 클로징. 추가 투자자 합류 예정 - 확대 클로징 발표 시 UPDATE 사유에 해당한다."
+        }
+      ],
+      "notes": "SN50 2026년 하반기 출하 예정, SoftBank 첫 배포 파트너. 직전 메가 라운드 5개월 후 조달. DX 판정: 데이터센터 추론."
+    },
+    {
+      "key": "infinity",
+      "name": "Infinity",
+      "category": "sys-software",
+      "hq": "US",
+      "cumulative_usd_m": 15,
+      "latest_valuation_usd_m": 100,
+      "rounds": [
+        {
+          "round": "Seed",
+          "amount_usd_m": 15,
+          "valuation_usd_m": 100,
+          "valuation_basis": "post-money",
+          "announced": "2026-07-20",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "Touring Capital",
+          "participants": ["Principal VC", "OpenAI·Anthropic 연구자 엔젤", "칩 기업 임원 엔젤"],
+          "strategics": [],
+          "samsung_affiliated": false,
+          "window": "W4",
+          "impact_at_last_report": 48,
+          "url": "https://techcrunch.com/2026/07/20/inference-startup-infinity-raises-15m-from-touring-capital-openai-and-athropic-researchers/"
+        }
+      ],
+      "notes": "CUDA 대안 커널 계층. 자율 에이전트 Ignition 이 신규 칩용 저수준 커널을 자동 생성·테스트·최적화. 지원 대상 SRAM 계열·GPU·폰 칩·시스톨릭 어레이. 칩 파트너 d-Matrix. 창업자 Jeremy Nixon(ex-Google Brain, AGI House). 26명. 과금은 성능 개선분(tokens/sec) 배분. $15M = 커널 조직 3-4년 런웨이."
+    },
+    {
+      "key": "dnotitia",
+      "name": "Dnotitia (디노티시아)",
+      "category": "infra-memory",
+      "hq": "KR",
+      "founded": 2023,
+      "cumulative_usd_m": 61.2,
+      "latest_valuation_usd_m": null,
+      "rounds": [
+        {
+          "round": "Series A",
+          "amount_usd_m": 61.2,
+          "amount_local": "약 900억원",
+          "valuation_usd_m": null,
+          "valuation_basis": "undisclosed",
+          "announced": "2026-07-13",
+          "first_reported": "2026-07-31",
+          "last_reported": "2026-07-31",
+          "report_count": 1,
+          "lead": "Elohim Partners",
+          "participants": ["Kiwoom Investment", "Starting Line", "Maple Investment Partners"],
+          "strategics": [],
+          "samsung_affiliated": false,
+          "window": "W4",
+          "impact_at_last_report": 42,
+          "url": "https://startuprise.org/dnotitia-raises-61-2-million-in-series-a-round-led-by-elohim-partners/"
+        }
+      ],
+      "notes": "서울. Seahorse(벡터 DB) + VDPU(벡터 데이터 처리 유닛, 세계 최초 주장). AI 스토리지·실행 계층. Morgan Stanley 주관 IPO 준비 보도. 국내 AI 반도체 중 메모리·데이터 경로 공략."
+    }
+  ],
+  "macro": [
+    {
+      "key": "qualcomm-modular-acquisition-2026",
+      "type": "ma",
+      "title": "Qualcomm, Modular 인수 완료 (Mojo·MAX 컴파일러·런타임 + Chris Lattner)",
+      "amount_usd_m": 3900,
+      "announced": "2026-06-24",
+      "closed": "2026-07-29",
+      "last_reported": "2026-07-31",
+      "window": "W8",
+      "url": "https://www.modular.com/blog/qualcomm-completes-acquisition-of-modular",
+      "note": "companies.modular 에 정식 기록. 금액은 그쪽에서 집계하므로 macro 에서는 중복 합산하지 않는다."
+    },
+    {
+      "key": "onsemi-synaptics-2026",
+      "type": "ma",
+      "title": "onsemi, Synaptics 인수 합의 (엣지 AI 프로세서·무선연결·HMI)",
+      "amount_usd_m": 7000,
+      "announced": "2026-06-25",
+      "expected_close": "2027-mid",
+      "last_reported": "2026-07-31",
+      "window": "pre-window (맥락 인용)",
+      "url": "https://www.newelectronics.co.uk/content/news/onsemi-agrees-7bn-acquisition-of-synaptics-to-expand-edge-ai-capabilities",
+      "note": "전액 주식. onsemi TAM 약 $30B 확대, 2030년 약 $243B 제시."
+    },
+    {
+      "key": "bigtech-capex-guidance-q2-2026",
+      "type": "capex",
+      "title": "빅테크 2026 AI capex 가이던스 상향 - 4사 합계 최대 약 $725B (전년 대비 +77%)",
+      "amount_usd_m": 725000,
+      "announced": "2026-07-22",
+      "last_reported": "2026-07-31",
+      "window": "W8",
+      "url": "https://valueaddvc.com/blog/alphabet-205b-ai-capex-guidance-2026-what-googles-q2-earnings-raise-actually-buys",
+      "note": "Alphabet $180-190B → $195-205B 상향(구글 클라우드 +82% YoY, 백로그 $514B). Meta $125-145B, Microsoft 약 $190B(부품가 약 $25B 포함), Amazon 약 $200B."
+    },
+    {
+      "key": "mgx-fund-1-close-2026",
+      "type": "sovereign-fund",
+      "title": "MGX(아부다비) Fund I $49B 클로징 - 반도체·AI 인프라 포함",
+      "amount_usd_m": 49000,
+      "announced": "2026-07-01",
+      "last_reported": "2026-07-31",
+      "window": "W4",
+      "url": "https://www.thenationalnews.com/business/markets/2026/07/01/abu-dhabis-ai-investment-firm-mgx-raises-49bn-for-new-fund/",
+      "note": "목표 $45B 초과. 향후 수년간 연 최대 $10B 집행 계획. 현재까지 14개사(Anthropic·OpenAI·xAI 등 모델 계층 중심)."
+    },
+    {
+      "key": "general-compute-upper90-debt-2026",
+      "type": "capex",
+      "title": "General Compute, Upper90으로부터 추론 클라우드 전용 $400M 대출",
+      "amount_usd_m": 400,
+      "announced": "2026-07-17",
+      "last_reported": "2026-07-31",
+      "window": "W4",
+      "url": "https://techcrunch.com/2026/07/17/why-the-first-gpu-financiers-are-turning-to-inference-chips-in-a-400-million-deal/",
+      "note": "지분이 아닌 자산담보부 부채로 추론 캐파를 짓는 구조. 지분 조달 총액에 합산하지 않는다."
+    }
+  ],
+  "rumors": [
+    {
+      "key": "samsung-mistral-1b-talks",
+      "title": "삼성전자, Mistral AI에 EUR 10억(약 $1.1B) 투자 협상 - Mistral 밸류 약 EUR 200억 논의",
+      "first_seen": "2026-07-22",
+      "last_checked": "2026-07-31",
+      "status": "talks",
+      "url": "https://www.pymnts.com/news/artificial-intelligence/2026/samsung-weighs-1-billion-dollar-investment-ai-firm-mistral/",
+      "note": "삼성·Mistral 공식 확인 없음. EQT Scaleup Europe Fund·Novo Holdings·Santander 도 협상 보도. ASML 최대주주. 삼성은 2024년 라운드 벤처 부문 참여 이력. ★삼성 계열 관련 유일 관측 활동 - 다음 회차 최우선 추적."
+    },
+    {
+      "key": "apple-ai-chip-ma-hunt",
+      "title": "Apple, 서버용 AI 추론 칩 역량 보강 목적 반도체 스타트업 인수 물색",
+      "first_seen": "2026-07-15",
+      "last_checked": "2026-07-31",
+      "status": "talks",
+      "url": "https://www.macrumors.com/2026/07/15/apple-looking-to-acquire-ai-chip-companies/",
+      "note": "뱅커 접촉 보도. 타깃 미공개, 계약 없음. M2 Ultra 서버 칩이 추론 워크로드에 부족하다는 배경."
+    },
+    {
+      "key": "apple-prismml-talks",
+      "title": "Apple, PrismML 협상 - 아이폰 온디바이스 대형모델 실행 압축 기술",
+      "first_seen": "2026-07-10",
+      "last_checked": "2026-07-31",
+      "status": "talks",
+      "url": "https://qz.com/apple-prismml-ai-models-iphone-071426",
+      "note": "PrismML 주장: 메모리 14배 축소·추론 8배 가속·에너지 효율 5배. 공동창업자 Caltech 교수 Babak Hassibi. 확정 시 온디바이스 경량화 축의 최상위 신호."
+    },
+    {
+      "key": "qualcomm-tenstorrent-talks",
+      "title": "Qualcomm, Tenstorrent $8-10B 인수 협상 (CEO Jim Keller 부인)",
+      "first_seen": "2026-06-16",
+      "last_checked": "2026-07-31",
+      "status": "died",
+      "died_on": "2026-07-31",
+      "url": "https://www.theregister.com/systems/2026/06/16/qualcomm-said-to-be-circling-ai-chip-biz-tenstorrent-in-10b-risc-v-power-play/5256084",
+      "note": "The Information 보도(6/16) 후 Tenstorrent CEO Jim Keller 가 도쿄 미디어 행사에서 협상 부인. Qualcomm 은 대신 Modular 인수. 정리 대상일: 2027-01-27(died 후 180일)."
+    }
+  ],
+  "watchlist_candidates": [
+    {
+      "name": "Multiverse Computing",
+      "reason": "sys-software 최대 딜. watchlist §2 System Software 명단에 추가 권장"
+    },
+    {
+      "name": "Infinity",
+      "reason": "커널 자동생성 - CUDA 대안 계층 신규 카테고리. §2 추가 권장"
+    },
+    {
+      "name": "Dnotitia (디노티시아)",
+      "reason": "한국 AI 반도체 Series A $61M. §2 한국 명단 추가 권장"
+    },
+    {
+      "name": "PrismML",
+      "reason": "Apple 협상 대상. 온디바이스 압축. §2 추가 권장"
+    },
+    {
+      "name": "Acrab",
+      "reason": "싱가포르, 누적 $350M, 엣지 에이전틱 SoC(GELIX 1, 5nm, 100B 파라미터 로컬 실행). 창 외부라 미게재. §2 추가 권장"
+    },
+    {
+      "name": "Jeremy Nixon (Infinity)",
+      "reason": "§4 주목 인물 - ex-Google Brain, 커널 자동생성 상용화"
+    },
+    {
+      "name": "Chris Lattner (Qualcomm EVP)",
+      "reason": "§4 주목 인물 - MLIR/LLVM 원저자, 이제 경쟁사 임원. 이동 추적 필요"
+    }
+  ],
+  "next_run_checklist": [
+    "SambaNova Series F 확대 클로징 (UPDATE 사유)",
+    "삼성-Mistral 협상 확정 여부 (rumor → confirmed 전환 대상)",
+    "Apple 칩 스타트업 인수 대상 공개 여부",
+    "Rebellions·FuriosaAI 코스피 상장예비심사(8월 예정) 및 후속 라운드",
+    "Mojo/MAX 의 NPU 백엔드 개방 범위 공개 여부",
+    "창 외부 미게재분의 후속 전개: Baseten(6/22 Series F $1.5B) · Acrab(6월 $350M) · DeepX Series D · Axelera(Samsung Catalyst 참여)"
+  ]
+}

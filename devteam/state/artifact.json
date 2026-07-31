@@ -1,0 +1,16 @@
+{
+  "url": "https://claude.ai/code/artifact/0ab0fdce-68e3-46c5-9222-5f233fd97a15",
+  "favicon": "👥📊",
+  "title": "개발 활동 브리핑",
+  "last_published": "2026-07-31",
+  "history": [
+    {
+      "period": "2026-07(30d)",
+      "published": "2026-07-31",
+      "label": "2026-07-baseline",
+      "url": "https://claude.ai/code/artifact/0ab0fdce-68e3-46c5-9222-5f233fd97a15",
+      "one_liner": "부서원 4명 중 2명이 github.com 공개 활동의 전량(커밋 1,369건·머지 521건)을 만들고 나머지 2명은 7월 공개 활동이 사실상 0인데, 이는 활동 유무의 문제가 아니라 작업 무대가 조회 범위 밖에 있다는 관측 공백이며, 동시에 팀 전체 코드 리뷰가 4명 모두 0건이라 개인 산출이 상호 검증 없이 진행되고 있다.",
+      "note": "신규 발행(기준선 회차). 다음 회차부터 이 url 을 그대로 전달해 같은 URL 에 갱신한다."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "url": "https://claude.ai/code/artifact/7f1c0b11-c942-42fc-9182-481db44aa835",
+  "favicon": "💰📈",
+  "title": "AI 자본 흐름 브리핑",
+  "last_published": "2026-07-31",
+  "history": [
+    {
+      "run": 1,
+      "date": "2026-07-31",
+      "label": "baseline-run-1",
+      "headline": "자본은 칩이 아니라 실행 소프트웨어로 갔다 - 신규 확정 자본의 68%가 System Software로",
+      "new_deals": 9,
+      "equity_usd_m": 4311.2,
+      "ma_usd_m": 3900,
+      "total_usd_m": 8211.2,
+      "strategic_deals": 5,
+      "updates": 0,
+      "rumors": 4,
+      "suppressed": 0,
+      "hot_deals": [
+        "Multiverse Computing - Series C $570M - impact 88",
+        "Qualcomm <- Modular - 인수 $3.9B - impact 87",
+        "Together AI - Series C $800M - impact 69",
+        "Fireworks AI - Series D $1.5B - impact 66",
+        "Etched - Series C $300M - impact 60"
+      ],
+      "report": "capital/reports/2026-07-31-ai-capital-brief.md"
+    }
+  ]
+}

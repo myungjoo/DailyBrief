@@ -1,0 +1,19 @@
+{
+  "_note": "Artifact 대시보드 URL. 매 회차 이 url을 Artifact 도구의 url 파라미터로 반드시 전달한다. 생략하면 새 URL이 발급되어 임원 북마크가 끊긴다. favicon은 이 파일의 favicon 값 고정, title은 'On-Device LLM 브리핑' 고정.",
+  "url": "https://claude.ai/code/artifact/117dbf2c-e31f-4494-83b8-f08f412def17",
+  "title": "On-Device LLM 브리핑",
+  "favicon": "📱🧠",
+  "source_file": "monitor/artifact/ondevice-llm-brief.html",
+  "last_published": "2026-07-31",
+  "orphans": [
+    {
+      "url": "https://claude.ai/code/artifact/6712cef7-0906-4e77-ad01-dc3c63ab8f18",
+      "created": "2026-07-31",
+      "reason": "url 파라미터 없이 재발행해 실수로 생성됨. claude.ai/code/artifacts 에서 삭제 대상."
+    }
+  ],
+  "history": [
+    { "date": "2026-07-31", "label": "baseline-001", "hot": 7, "new": 13, "resurgence": 0, "suppressed": 0 },
+    { "date": "2026-07-31", "label": "narrow-frame-fix", "note": "좁은 프레임 레이아웃 수정. 내용 변경 없음." }
+  ]
+}
