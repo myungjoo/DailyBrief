@@ -1,7 +1,19 @@
 {
-  "url": null,
+  "_note": "허브 메인 페이지 URL. 매 회차 이 url을 Artifact 도구의 url 파라미터로 반드시 전달한다. 생략하면 새 URL이 발급되어 임원의 유일한 진입점이 끊긴다. favicon과 title은 이 파일의 값 고정.",
+  "url": "https://claude.ai/code/artifact/ec6a435e-baba-42af-8c70-7d8f4dc84d74",
   "favicon": "🗂️🛰️",
   "title": "DailyBrief - 에이전트 팀 현황",
-  "last_published": null,
-  "history": []
+  "source_file": "hub/artifact/dailybrief-hub.html",
+  "last_published": "2026-07-31",
+  "contains_personal_data": true,
+  "share_warning": "dev-activity-monitor 탭에 부서원 실명과 개인별 산출 지표가 포함된다. 공유 시 함께 노출됨을 고지할 것.",
+  "history": [
+    {
+      "date": "2026-07-31",
+      "label": "hub-baseline-001",
+      "agents": 3,
+      "totals": { "ok": 3, "warn": 0, "stale": 0, "never": 0 },
+      "note": "첫 발행(신규 URL 발급). 다음 회차부터 이 url 을 그대로 전달해 같은 URL 에 갱신한다."
+    }
+  ]
 }

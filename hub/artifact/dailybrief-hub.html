@@ -1,0 +1,1236 @@
+<title>DailyBrief - 에이전트 팀 현황</title>
+
+<style>
+  :root {
+    --ground: #F4F3F7;
+    --surface: #FFFFFF;
+    --surface-2: #EFEEF4;
+    --ink: #17161D;
+    --ink-2: #4A4857;
+    --ink-3: #6E6B7D;
+    --line: #D9D7E2;
+    --line-2: #E9E7F0;
+    --accent: #4A3E8C;
+    --accent-soft: #EDEAF7;
+
+    --ok-fg: #1B6B45;   --ok-bg: #E4F1EA;   --ok-bd: #A9D2BE;
+    --warn-fg: #8A5A0B; --warn-bg: #FAF0DC; --warn-bd: #E0C48C;
+    --stale-fg: #9B2C2C;--stale-bg: #FAE7E7;--stale-bd: #E2AEAE;
+    --never-fg: #4C4A57; --never-bg: #E7E6EC; --never-bd: #C3C1CE;
+    --man-fg: #3A5C7A;  --man-bg: #E4EDF5;  --man-bd: #AAC4DA;
+
+    --font-sans: system-ui, -apple-system, "Segoe UI", "Malgun Gothic",
+                 "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas,
+                 Menlo, monospace;
+
+    --shell: 1080px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #131218;
+      --surface: #1C1B23;
+      --surface-2: #24232D;
+      --ink: #E9E7F0;
+      --ink-2: #B4B1C2;
+      --ink-3: #8C8999;
+      --line: #34323F;
+      --line-2: #2A2935;
+      --accent: #AFA2EE;
+      --accent-soft: #292537;
+
+      --ok-fg: #7FCFA5;   --ok-bg: #16281F;   --ok-bd: #2F5B44;
+      --warn-fg: #E0B466; --warn-bg: #2A2113;  --warn-bd: #5C4823;
+      --stale-fg: #EC9A9A;--stale-bg: #2B1818; --stale-bd: #5E3131;
+      --never-fg: #A9A6B6; --never-bg: #232229; --never-bd: #43414E;
+      --man-fg: #8FB6D6;  --man-bg: #16212B;   --man-bd: #33506A;
+    }
+  }
+
+  :root[data-theme="light"] {
+    --ground: #F4F3F7;
+    --surface: #FFFFFF;
+    --surface-2: #EFEEF4;
+    --ink: #17161D;
+    --ink-2: #4A4857;
+    --ink-3: #6E6B7D;
+    --line: #D9D7E2;
+    --line-2: #E9E7F0;
+    --accent: #4A3E8C;
+    --accent-soft: #EDEAF7;
+    --ok-fg: #1B6B45;   --ok-bg: #E4F1EA;   --ok-bd: #A9D2BE;
+    --warn-fg: #8A5A0B; --warn-bg: #FAF0DC; --warn-bd: #E0C48C;
+    --stale-fg: #9B2C2C;--stale-bg: #FAE7E7;--stale-bd: #E2AEAE;
+    --never-fg: #4C4A57; --never-bg: #E7E6EC; --never-bd: #C3C1CE;
+    --man-fg: #3A5C7A;  --man-bg: #E4EDF5;  --man-bd: #AAC4DA;
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #131218;
+    --surface: #1C1B23;
+    --surface-2: #24232D;
+    --ink: #E9E7F0;
+    --ink-2: #B4B1C2;
+    --ink-3: #8C8999;
+    --line: #34323F;
+    --line-2: #2A2935;
+    --accent: #AFA2EE;
+    --accent-soft: #292537;
+    --ok-fg: #7FCFA5;   --ok-bg: #16281F;   --ok-bd: #2F5B44;
+    --warn-fg: #E0B466; --warn-bg: #2A2113;  --warn-bd: #5C4823;
+    --stale-fg: #EC9A9A;--stale-bg: #2B1818; --stale-bd: #5E3131;
+    --never-fg: #A9A6B6; --never-bg: #232229; --never-bd: #43414E;
+    --man-fg: #8FB6D6;  --man-bg: #16212B;   --man-bd: #33506A;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: var(--shell);
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* ---------- console header ---------- */
+
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .masthead-inner {
+    padding-top: 30px;
+    padding-bottom: 22px;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(24px, 4.4vw, 33px);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 660;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .masthead p.lede {
+    margin: 10px 0 0;
+    color: var(--ink-2);
+    max-width: 62ch;
+    font-size: 14.5px;
+  }
+
+  /* readout strip: each child is a single unit -> grid is safe here */
+  .readouts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-top: 22px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .readout {
+    flex: 1 1 118px;
+    min-width: 0;
+    padding: 11px 14px;
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .readout:last-child { border-right: 0; }
+  .readout .k {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .readout .v {
+    display: block;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-top: 2px;
+  }
+  .readout.is-ok .v { color: var(--ok-fg); }
+  .readout.is-warn .v { color: var(--warn-fg); }
+  .readout.is-stale .v { color: var(--stale-fg); }
+  .readout.is-never .v { color: var(--never-fg); }
+
+  .stamp {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- tab rail ---------- */
+
+  .railwrap {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--ground);
+    border-bottom: 1px solid var(--line);
+  }
+  .rail {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: thin;
+  }
+  .rail button {
+    appearance: none;
+    display: inline-block;
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin: 0;
+    padding: 13px 16px 11px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 560;
+    letter-spacing: 0.01em;
+    color: var(--ink-3);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .rail button:hover { color: var(--ink); }
+  .rail button[aria-selected="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+  .rail button .tick {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: 1px;
+    background: var(--ok-fg);
+  }
+  .rail button .num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+    margin-right: 8px;
+  }
+
+  main { padding: 26px 0 64px; }
+
+  /* ---------- section furniture ---------- */
+
+  h2.sec {
+    font-size: 12px;
+    font-weight: 640;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 12px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--line);
+  }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .panel-head { margin-bottom: 24px; }
+  .panel-head h3 {
+    font-size: clamp(19px, 3.2vw, 24px);
+    letter-spacing: -0.015em;
+    font-weight: 640;
+    margin: 6px 0 0;
+    text-wrap: balance;
+  }
+  .headline {
+    margin: 14px 0 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+    max-width: 68ch;
+    border-left: 2px solid var(--accent);
+    padding-left: 14px;
+  }
+  .footnote {
+    margin: 10px 0 0;
+    font-size: 12.5px;
+    color: var(--ink-3);
+    max-width: 70ch;
+  }
+
+  /* ---------- agent row card ---------- */
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 18px 20px 16px;
+  }
+  .card-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 14px;
+    margin-bottom: 4px;
+  }
+  .card-top h3 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 640;
+    letter-spacing: -0.01em;
+  }
+  .role {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--ink-3);
+  }
+  .cadence {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 2px 6px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 640;
+    letter-spacing: 0.04em;
+    border-radius: 2px;
+    padding: 2px 9px 3px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .badge .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: 1px;
+    background: currentColor;
+  }
+  .badge .age {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-left: 6px;
+  }
+  .b-ok    { color: var(--ok-fg);    background: var(--ok-bg);    border-color: var(--ok-bd); }
+  .b-warn  { color: var(--warn-fg);  background: var(--warn-bg);  border-color: var(--warn-bd); }
+  .b-stale { color: var(--stale-fg); background: var(--stale-bg); border-color: var(--stale-bd); }
+  .b-never { color: var(--never-fg); background: var(--never-bg); border-color: var(--never-bd); }
+  .b-man   { color: var(--man-fg);   background: var(--man-bg);   border-color: var(--man-bd); }
+
+  /* label/value block: dt+dd are single units, 1:1 with grid cells */
+  dl.kv {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 5px 16px;
+    margin: 0;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    font-size: 13.5px;
+  }
+  dl.kv dt {
+    white-space: nowrap;
+    color: var(--ink-3);
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+  }
+  dl.kv dd {
+    margin: 0;
+    min-width: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  dl.kv dd .n {
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+
+  .card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    margin-top: 14px;
+    padding-top: 13px;
+    border-top: 1px solid var(--line-2);
+  }
+  a.link {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 560;
+    border-bottom: 1px solid transparent;
+  }
+  a.link:hover { border-bottom-color: var(--accent); }
+  a.link .ext {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+    margin-left: 4px;
+  }
+  .sep { color: var(--line); }
+
+  button.cmd {
+    appearance: none;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    background: var(--accent-soft);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 3px 10px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+  button.cmd:hover { border-color: var(--accent); }
+  button.cmd[data-state="done"] {
+    color: var(--ok-fg);
+    background: var(--ok-bg);
+    border-color: var(--ok-bd);
+  }
+  button.cmd[data-state="manual"] {
+    color: var(--warn-fg);
+    background: var(--warn-bg);
+    border-color: var(--warn-bd);
+  }
+
+  /* ---------- notes ---------- */
+
+  .note {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--man-bd);
+    background: var(--surface);
+    border-radius: 2px;
+    padding: 12px 15px;
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .note strong { color: var(--ink); }
+  .note.privacy { border-left-color: var(--warn-bd); }
+  .note p { margin: 0; }
+  .note p + p { margin-top: 7px; }
+
+  /* numbered list without grid/flex: absolute marker */
+  ol.marked {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  ol.marked li {
+    position: relative;
+    padding-left: 30px;
+    margin-bottom: 11px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+  }
+  ol.marked li:last-child { margin-bottom: 0; }
+  ol.marked li strong { color: var(--ink); font-weight: 620; }
+  ol.marked li::before {
+    content: counter(step);
+    counter-increment: step;
+    position: absolute;
+    left: 0;
+    top: 1px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    width: 20px;
+    text-align: center;
+    line-height: 18px;
+  }
+  ol.marked { counter-reset: step; }
+
+  ul.plain { list-style: none; margin: 0; padding: 0; }
+  ul.plain li {
+    position: relative;
+    padding-left: 15px;
+    margin-bottom: 9px;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  ul.plain li:last-child { margin-bottom: 0; }
+  ul.plain li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 9px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  ul.plain li strong { color: var(--ink); font-weight: 620; }
+
+  /* ---------- tables ---------- */
+
+  .scroller {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--surface);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 620px;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 9px 13px;
+    border-bottom: 1px solid var(--line-2);
+    vertical-align: top;
+  }
+  thead th {
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 620;
+    white-space: nowrap;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num, th.num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+  td.mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  td .who { font-weight: 620; color: var(--ink); }
+  td .id {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+    display: block;
+  }
+  .score {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 1px 6px;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .tag.flag {
+    color: var(--warn-fg);
+    background: var(--warn-bg);
+    border-color: var(--warn-bd);
+  }
+  .tag.gap {
+    color: var(--never-fg);
+    background: var(--never-bg);
+    border-color: var(--never-bd);
+  }
+
+  /* ---------- history disclosure ---------- */
+
+  details.hist {
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--surface);
+    padding: 0;
+  }
+  details.hist summary {
+    cursor: pointer;
+    padding: 11px 15px;
+    font-size: 13px;
+    font-weight: 560;
+    color: var(--ink-2);
+    list-style: none;
+  }
+  details.hist summary::-webkit-details-marker { display: none; }
+  details.hist summary::before {
+    content: "+";
+    font-family: var(--font-mono);
+    color: var(--accent);
+    margin-right: 9px;
+    font-weight: 600;
+  }
+  details.hist[open] summary::before { content: "\2212"; }
+  details.hist summary:hover { color: var(--ink); }
+  .hist-body {
+    padding: 0 15px 14px;
+    border-top: 1px solid var(--line-2);
+  }
+  .hist-row { padding-top: 12px; }
+  .hist-row .when {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .hist-row p {
+    margin: 4px 0 0;
+    font-size: 13.5px;
+    color: var(--ink-2);
+  }
+
+  .subgrid { display: flex; flex-wrap: wrap; gap: 14px; }
+  .subgrid > * { flex: 1 1 300px; min-width: 0; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .sr {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  #copy-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    max-width: calc(100% - 32px);
+    z-index: 60;
+    background: var(--ink);
+    color: var(--ground);
+    border-radius: 3px;
+    padding: 9px 15px;
+    font-size: 13px;
+    line-height: 1.45;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+    display: none;
+  }
+  #copy-toast[data-on] { display: block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  /* responsive overrides last, after every base rule above */
+  @media (max-width: 620px) {
+    .shell { padding: 0 15px; }
+    .readout { flex: 1 1 50%; border-bottom: 1px solid var(--line); }
+    .headline { font-size: 15px; }
+    dl.kv { font-size: 13px; }
+  }
+  @media (max-width: 380px) {
+    dl.kv { gap: 3px 10px; }
+    .card { padding: 15px 14px 14px; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="shell masthead-inner">
+    <p class="eyebrow">DailyBrief / Agent Control</p>
+    <h1>에이전트 팀 현황</h1>
+    <p class="lede">
+      리포트를 새로 만들지 않는다. 각 에이전트가 남긴 상태 파일과 리포트를 모아
+      <strong>무엇이 언제 갱신되었는지</strong>를 보여주는 관제 화면이다.
+    </p>
+
+    <div class="readouts">
+      <div class="readout"><span class="k">에이전트</span><span class="v">3</span></div>
+      <div class="readout is-ok"><span class="k">최신</span><span class="v">3</span></div>
+      <div class="readout is-warn"><span class="k">주의</span><span class="v">0</span></div>
+      <div class="readout is-stale"><span class="k">정체</span><span class="v">0</span></div>
+      <div class="readout is-never"><span class="k">미실행</span><span class="v">0</span></div>
+    </div>
+    <p class="stamp">허브 집계 기준일 2026-07-31 · 회차 1 · 레지스트리 3개 전량 통합 · 미등록 에이전트 없음</p>
+  </div>
+</header>
+
+<div class="railwrap">
+  <div class="shell">
+    <div class="rail" role="tablist" aria-label="브리핑 영역">
+      <button role="tab" id="t-all" aria-controls="p-all" aria-selected="true" tabindex="0">전체</button>
+      <button role="tab" id="t-tech" aria-controls="p-tech" aria-selected="false" tabindex="-1"><span class="num">01</span><span class="tick" aria-hidden="true"></span>기술 동향</button>
+      <button role="tab" id="t-invest" aria-controls="p-invest" aria-selected="false" tabindex="-1"><span class="num">02</span><span class="tick" aria-hidden="true"></span>투자 동향</button>
+      <button role="tab" id="t-dev" aria-controls="p-dev" aria-selected="false" tabindex="-1"><span class="num">03</span><span class="tick" aria-hidden="true"></span>개발 활동</button>
+    </div>
+  </div>
+</div>
+
+<main class="shell">
+
+  <!-- ============ 전체 ============ -->
+  <section role="tabpanel" id="p-all" aria-labelledby="t-all" tabindex="0">
+
+    <h2 class="sec">에이전트 3개 · 최신 3 · 주의 0 · 정체 0 · 미실행 0</h2>
+
+    <div class="stack">
+
+      <article class="card">
+        <div class="card-top">
+          <h3>기술 동향</h3>
+          <span class="badge b-ok"><span class="dot" aria-hidden="true"></span>최신<span class="age">0일 전</span></span>
+          <span class="cadence">daily</span>
+          <span class="stamp" style="margin:0">갱신 2026-07-31</span>
+        </div>
+        <p class="role">On-Device LLM · Runtime · Compiler · 경량화 기술 동향</p>
+        <p class="headline">
+          온디바이스 LLM의 병목이 연산(TOPS)에서 <strong>메모리 대역폭·용량</strong>으로 완전히 이동했고,
+          업계 대응이 세 방향 - NPU 친화 완전 정적 양자화 · 3D 스택 메모리 NPU · 디스크/플래시 스트리밍 실행 - 으로 갈라졌다.
+        </p>
+        <dl class="kv" style="margin-top:14px">
+          <dt>보유 데이터</dt>
+          <dd><span class="n">13</span>개 추적 항목 · 재보고 <span class="n">0</span>건 · 마지막 수집 <span class="n">2026-07-31</span></dd>
+          <dt>이력</dt>
+          <dd><span class="n">1</span>회차 · 최초 <span class="n">2026-07-31</span></dd>
+        </dl>
+        <div class="card-foot">
+          <a class="link" href="https://claude.ai/code/artifact/117dbf2c-e31f-4494-83b8-f08f412def17" target="_blank" rel="noopener">전용 대시보드<span class="ext">↗</span></a>
+          <span class="sep">|</span>
+          <a class="link" href="#tab-tech">이 페이지의 기술 동향 탭</a>
+          <span class="sep">|</span>
+          <button class="cmd" type="button" data-cmd="/ondevice-brief">/ondevice-brief</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>투자 동향</h3>
+          <span class="badge b-ok"><span class="dot" aria-hidden="true"></span>최신<span class="age">0일 전</span></span>
+          <span class="cadence">weekly</span>
+          <span class="stamp" style="margin:0">갱신 2026-07-31</span>
+        </div>
+        <p class="role">LLM · NPU · System Software 분야 투자·펀딩·M&amp;A</p>
+        <p class="headline">
+          신규 확정 자본의 <strong>68%가 NPU 실리콘이 아니라 시스템 소프트웨어</strong>로 들어갔고,
+          그 정점에서 Qualcomm이 Chris Lattner의 컴파일러·런타임 스택(Modular)을 $3.9B에 사들여 7/29 클로징했다.
+        </p>
+        <dl class="kv" style="margin-top:14px">
+          <dt>보유 데이터</dt>
+          <dd>추적 기업 <span class="n">9</span>곳 · 누적 딜 <span class="n">12</span>건 · 누적 조달액 <span class="n">$5,331M</span> · 거대자본 <span class="n">5</span>건 · 루머 <span class="n">3</span>건</dd>
+          <dt>이력</dt>
+          <dd><span class="n">1</span>회차 · 최초 <span class="n">2026-07-31</span></dd>
+        </dl>
+        <div class="card-foot">
+          <a class="link" href="https://claude.ai/code/artifact/7f1c0b11-c942-42fc-9182-481db44aa835" target="_blank" rel="noopener">전용 대시보드<span class="ext">↗</span></a>
+          <span class="sep">|</span>
+          <a class="link" href="#tab-invest">이 페이지의 투자 동향 탭</a>
+          <span class="sep">|</span>
+          <button class="cmd" type="button" data-cmd="/invest-brief">/invest-brief</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-top">
+          <h3>개발 활동</h3>
+          <span class="badge b-ok"><span class="dot" aria-hidden="true"></span>최신<span class="age">0일 전</span></span>
+          <span class="cadence">monthly</span>
+          <span class="stamp" style="margin:0">갱신 2026-07-31</span>
+        </div>
+        <p class="role">부서원 GitHub 활동 - 작업 주제와 산출 지표 <span class="tag flag">개인 지표 포함</span></p>
+        <p class="headline">
+          부서원 4명 중 2명이 github.com 공개 활동의 전량(커밋 1,369건·머지 521건)을 만들고 나머지 2명은 7월 공개 활동이 사실상 0인데,
+          이는 활동 유무가 아니라 <strong>작업 무대가 조회 범위 밖에 있다는 관측 공백</strong>이며,
+          동시에 <strong>팀 전체 코드 리뷰가 4명 모두 0건</strong>이라 개인 산출이 상호 검증 없이 진행되고 있다.
+        </p>
+        <dl class="kv" style="margin-top:14px">
+          <dt>보유 데이터</dt>
+          <dd>대상 인원 <span class="n">4</span>명 · 활동 관측 <span class="n">3</span>명 · 스냅샷 <span class="n">1</span>건 · 정체 항목 <span class="n">5</span>건</dd>
+          <dt>이력</dt>
+          <dd><span class="n">1</span>회차 · 최초 <span class="n">2026-07</span></dd>
+        </dl>
+        <div class="card-foot">
+          <a class="link" href="https://claude.ai/code/artifact/0ab0fdce-68e3-46c5-9222-5f233fd97a15" target="_blank" rel="noopener">전용 대시보드<span class="ext">↗</span></a>
+          <span class="sep">|</span>
+          <a class="link" href="#tab-dev">이 페이지의 개발 활동 탭</a>
+          <span class="sep">|</span>
+          <button class="cmd" type="button" data-cmd="/dev-activity">/dev-activity</button>
+        </div>
+      </article>
+
+    </div>
+
+    <h2 class="sec" style="margin-top:30px">이 화면을 읽는 방법</h2>
+    <div class="subgrid">
+      <div class="note">
+        <p><strong>신선도는 주기 기준으로 판정한다.</strong>
+        daily는 1일 이내, weekly는 7일 이내, monthly는 31일 이내가 <strong>최신</strong>이다.
+        주기를 등록하지 않은 <code>manual</code> 항목은 오래된 것이 결함이 아니므로 판정하지 않고 경과 일수만 표시한다.
+        이번 회차는 세 에이전트 모두 2026-07-31에 갱신되어 전부 최신이다.</p>
+      </div>
+      <div class="note privacy">
+        <p><strong>호출은 복사까지가 이 페이지의 역할이다.</strong>
+        발행된 페이지는 로컬 Claude Code 서브 에이전트를 실행할 수 없다.
+        커맨드 칩을 누르면 커맨드가 클립보드에 복사된다 -
+        복사해 Claude Code 터미널에 붙여넣으면 해당 에이전트가 실행된다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 기술 동향 ============ -->
+  <section role="tabpanel" id="p-tech" aria-labelledby="t-tech" tabindex="0" hidden>
+
+    <div class="panel-head">
+      <p class="eyebrow">01 / ondevice-llm-monitor · daily</p>
+      <h3>기술 동향 - On-Device LLM · Runtime · Compiler · 경량화</h3>
+      <p class="stamp">갱신 2026-07-31 (0일 전) · 회차 1 · 기준선 회차</p>
+      <p class="headline">
+        온디바이스 LLM의 병목이 연산(TOPS)에서 <strong>메모리 대역폭·용량</strong>으로 완전히 이동했고,
+        업계 대응이 세 방향 - NPU 친화 완전 정적 양자화 · 3D 스택 메모리 NPU · 디스크/플래시 스트리밍 실행 - 으로 갈라졌다.
+      </p>
+      <div class="card-foot" style="border-top:0; padding-top:12px; margin-top:2px">
+        <span class="badge b-ok"><span class="dot" aria-hidden="true"></span>최신<span class="age">0일 전</span></span>
+        <a class="link" href="https://claude.ai/code/artifact/117dbf2c-e31f-4494-83b8-f08f412def17" target="_blank" rel="noopener">전용 대시보드에서 상세 보기<span class="ext">↗</span></a>
+        <span class="sep">|</span>
+        <button class="cmd" type="button" data-cmd="/ondevice-brief">/ondevice-brief</button>
+      </div>
+    </div>
+
+    <h2 class="sec">이번 회차 핫 이슈 (주목도 60 이상)</h2>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th><th>분류</th><th>핵심</th><th class="num">주목도</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="who">Meta - On-Device LLMs: State of the Union 2026</span></td>
+            <td><span class="tag">전략</span></td>
+            <td>모바일 50-90 GB/s vs DC GPU 2-3 TB/s, <strong>30-50배 대역폭 격차</strong>를 병목으로 못 박았다. 소규모 스케일에서 deep-thin 구조 우세.</td>
+            <td class="num"><span class="score">72</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Qualcomm 80 TOPS 균일화 + 3D-DRAM NPU</span></td>
+            <td><span class="tag">하드웨어</span></td>
+            <td>X2 Plus까지 80 TOPS를 균일 배치해 연산을 상품화하고, <strong>3D-DRAM 스택 NPU(40 TOPS + 4GB)</strong>로 대역폭 축 선점을 노린다.</td>
+            <td class="num"><span class="score">70</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Exynos 2600(2nm) vs Dimensity 9500</span></td>
+            <td><span class="tag">경쟁 구도</span></td>
+            <td>GenAI +113%로 연산 격차는 좁혔으나 S26 실측에서 Snapdragon 8 Elite가 여전히 우위 - <strong>남은 격차는 소프트웨어 스택</strong>.</td>
+            <td class="num"><span class="score">66</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Google LiteRT-LM × Gemma 4 × ARM SME2</span></td>
+            <td><span class="tag">런타임</span></td>
+            <td>런타임이 XNNPACK→KleidiAI 경유로 SME2를 자동 감지·선택. <strong>Exynos NPU가 1급 백엔드로 등재됐는지</strong>가 관건.</td>
+            <td class="num"><span class="score">65</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">ExecuTorch 통합 온디바이스 런타임</span></td>
+            <td><span class="tag">런타임</span></td>
+            <td>풋프린트 50KB · 백엔드 12종 이상 · HF 인기 엣지 LLM 80%+ 무수정 동작. 백엔드 목록에 <strong>Exynos/ENN이 없다</strong>.</td>
+            <td class="num"><span class="score">64</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Quant.npu - 정수 전용 완전 정적 양자화</span></td>
+            <td><span class="tag">경량화</span></td>
+            <td>동적 활성 양자화를 전제하던 AWQ/GPTQ가 NPU에서 못 돌던 간극을 메워 실기 NPU 지연 <strong>최대 15.1% 감소</strong>.</td>
+            <td class="num"><span class="score">62</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Colibri - 디스크 expert 스트리밍</span></td>
+            <td><span class="tag">시스템 기법</span></td>
+            <td>744B MoE를 필요한 expert만 디스크에서 스트리밍해 <strong>RAM 약 25GB</strong>로 구동. 자사 NAND 수직통합과 겹치는 축.</td>
+            <td class="num"><span class="score">61</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="sec" style="margin-top:26px">임원 판단이 필요한 지점</h2>
+    <ol class="marked">
+      <li><strong>NPU 경쟁력 지표를 TOPS에서 유효 대역폭·온칩 메모리·상주 모델 용량으로 재정의</strong>할 시점이다. 대응 축이 TOPS면 이미 뒤진 경쟁이다.</li>
+      <li><strong>ExecuTorch·LiteRT 백엔드 등재 여부 점검.</strong> 모델 공급 파이프라인에서 빠지면 외부 모델을 올릴 때마다 별도 포팅 비용이 발생하고, 앱은 ARM CPU 경로로 떨어져 NPU가 유휴로 남는다.</li>
+      <li><strong>ENN 툴체인 양자화 프론트엔드가 정적 양자화 흐름을 받고 있는지 확인.</strong> 외부 공개 모델을 손실 없이 정적화하는 능력이 곧 모델 공급 속도다.</li>
+    </ol>
+
+    <h2 class="sec" style="margin-top:26px">보유 데이터 원장</h2>
+    <div class="subgrid">
+      <dl class="kv">
+        <dt>추적 항목</dt><dd><span class="n">13</span>건 (seen-index)</dd>
+        <dt>재보고 항목</dt><dd><span class="n">0</span>건 (report_count 2회 이상)</dd>
+        <dt>마지막 수집</dt><dd><span class="n">2026-07-31</span></dd>
+        <dt>중복 제거</dt><dd>5일 창 · 다음 회차부터 적용</dd>
+      </dl>
+      <div class="note">
+        <p><strong>첫 회차이므로 중복 생략 0건이다.</strong>
+        13개 항목이 원장에 등재됐고, 다음 회차부터 5일 중복 제거가 적용되어 신규·급상승 항목만 남는다.
+        급상승 조건 충족 시 5일 내라도 재노출된다.</p>
+      </div>
+    </div>
+
+    <details class="hist" style="margin-top:14px">
+      <summary>회차 이력 (1회차)</summary>
+      <div class="hist-body">
+        <div class="hist-row">
+          <span class="when">2026-07-31</span>
+          <p>기준선 회차 - 병목이 연산에서 메모리 대역폭·용량으로 이동. 신규 13건 · 급상승 재보고 0건 · 중복 생략 0건.</p>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ============ 투자 동향 ============ -->
+  <section role="tabpanel" id="p-invest" aria-labelledby="t-invest" tabindex="0" hidden>
+
+    <div class="panel-head">
+      <p class="eyebrow">02 / ai-capital-monitor · weekly</p>
+      <h3>투자 동향 - LLM · NPU · System Software 자본 흐름</h3>
+      <p class="stamp">갱신 2026-07-31 (0일 전) · 회차 1 · 수집 창 W8 2026-07-23~07-31 / W4 07-01~07-22</p>
+      <p class="headline">
+        신규 확정 자본의 <strong>68%가 NPU 실리콘이 아니라 NPU/LLM용 시스템 소프트웨어</strong>로 들어갔고,
+        그 정점에서 Qualcomm이 Chris Lattner의 컴파일러·런타임 스택(Modular)을 $3.9B에 사들여 7/29 클로징했다.
+      </p>
+      <div class="card-foot" style="border-top:0; padding-top:12px; margin-top:2px">
+        <span class="badge b-ok"><span class="dot" aria-hidden="true"></span>최신<span class="age">0일 전</span></span>
+        <a class="link" href="https://claude.ai/code/artifact/7f1c0b11-c942-42fc-9182-481db44aa835" target="_blank" rel="noopener">전용 대시보드에서 상세 보기<span class="ext">↗</span></a>
+        <span class="sep">|</span>
+        <button class="cmd" type="button" data-cmd="/invest-brief">/invest-brief</button>
+      </div>
+    </div>
+
+    <h2 class="sec">핫 딜 (impact 60 이상)</h2>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr>
+            <th>회사</th><th>분야</th><th>라운드 · 금액</th><th>밸류</th><th>전략적 투자자</th><th class="num">impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="who">Multiverse Computing</span><span class="id">ES · 2019</span></td>
+            <td>System SW<br><span class="tag">압축 툴체인</span></td>
+            <td class="mono">Series C<br>$570M</td>
+            <td class="mono">$1.7B<br><span class="id">pre-money</span></td>
+            <td>HP Inc.</td>
+            <td class="num"><span class="score">88</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Qualcomm ← Modular</span><span class="id">US · 7/29 클로징</span></td>
+            <td>System SW<br><span class="tag">컴파일러·런타임</span></td>
+            <td class="mono">인수<br>$3.9B</td>
+            <td class="mono">$3.9B<br><span class="id">인수 대가</span></td>
+            <td>Qualcomm</td>
+            <td class="num"><span class="score">87</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Together AI</span><span class="id">US · 2022</span></td>
+            <td>System SW<br><span class="tag">추론 서빙</span></td>
+            <td class="mono">Series C<br>$800M</td>
+            <td class="mono">$8.3B<br><span class="id">post-money</span></td>
+            <td>NVIDIA · Pegatron</td>
+            <td class="num"><span class="score">69</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Fireworks AI</span><span class="id">US · 2022</span></td>
+            <td>System SW<br><span class="tag">서빙 최적화</span></td>
+            <td class="mono">Series D<br>$1,500M</td>
+            <td class="mono">$17.5B<br><span class="id">구분 미확인</span></td>
+            <td>NVIDIA</td>
+            <td class="num"><span class="score">66</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Etched</span><span class="id">US · 2022</span></td>
+            <td>NPU 실리콘<br><span class="tag">추론 ASIC</span></td>
+            <td class="mono">Series C<br>$300M</td>
+            <td class="mono">$10.3B<br><span class="id">post-money</span></td>
+            <td>SK hynix</td>
+            <td class="num"><span class="score">60</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="sec" style="margin-top:26px">자본이 어디로 갔는가</h2>
+    <ul class="plain">
+      <li><strong>실리콘에서 실행 소프트웨어로.</strong> 신규 확정 지분 조달 $4,311M 중 시스템 SW가 $2,950M(68%), NPU 실리콘이 $1,300M(30%). 인수 대가까지 넣으면 83%. 라운드 개수도 5:2다. 다만 4주 표본 1회차이므로 추세가 아니라 스냅샷이다.</li>
+      <li><strong>컴파일러 계층이 매입 대상으로 재분류됐다.</strong> Qualcomm은 이제 Hexagon NPU · MLIR 원저자 · 하드웨어 중립 상용 런타임을 동시에 보유한다. 개발자가 Exynos용 코드를 별도로 쓰지 않게 만드는 방향으로 작동한다.</li>
+      <li><strong>온디바이스 경량화가 단독 카테고리가 됐다.</strong> 모델 압축만으로 5억 달러대를 받은 첫 사례(Multiverse $570M)에 Apple-PrismML 협상 보도와 Ollama 로컬 런타임 조달이 같은 4주에 겹쳤다.</li>
+      <li><strong>삼성 계열 확정 신규 투자는 0건.</strong> 같은 창에서 SK hynix·NVIDIA·HP·Pegatron·Qualcomm은 각자 베팅을 마쳤다. 유일한 관측 활동은 Mistral 투자 협상 보도이며 <strong>미확정 루머</strong>로 분류돼 있다.</li>
+    </ul>
+
+    <h2 class="sec" style="margin-top:26px">보유 데이터 원장</h2>
+    <div class="subgrid">
+      <dl class="kv">
+        <dt>추적 기업</dt><dd><span class="n">9</span>곳</dd>
+        <dt>누적 딜</dt><dd><span class="n">12</span>건 (라운드 기준)</dd>
+        <dt>누적 조달액</dt><dd><span class="n">$5,331M</span> (원장 합계)</dd>
+        <dt>거대자본 항목</dt><dd><span class="n">5</span>건 (M&amp;A · capex · 국부펀드)</dd>
+        <dt>루머</dt><dd><span class="n">3</span>건 생존 · <span class="n">1</span>건 died</dd>
+        <dt>마지막 수집</dt><dd><span class="n">2026-07-31</span></dd>
+      </dl>
+      <div class="note">
+        <p><strong>누적 조달액은 이번 회차에 1차 출처로 확인된 라운드만 합산한 값이다.</strong>
+        각 사의 실제 역대 누적과 다를 수 있고, 회차가 쌓이며 정확도가 올라간다.
+        인수 대가($3.9B Modular)는 지분 조달이 아니므로 합산에서 제외돼 있다.</p>
+        <p>생존 루머 3건: 삼성-Mistral 협상 · Apple 칩 스타트업 물색 · Apple-PrismML 협상.
+        Qualcomm-Tenstorrent는 CEO 부인으로 <code>died</code> 처리됐다.</p>
+      </div>
+    </div>
+
+    <details class="hist" style="margin-top:14px">
+      <summary>회차 이력 (1회차)</summary>
+      <div class="hist-body">
+        <div class="hist-row">
+          <span class="when">2026-07-31</span>
+          <p>기준선 회차 - 자본은 칩이 아니라 실행 소프트웨어로 갔다. 신규 확정 딜 9건(지분 $4,311M + 인수 $3,900M) · 갱신 0건 · 루머 4건 · 중복 생략 0건.</p>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ============ 개발 활동 ============ -->
+  <section role="tabpanel" id="p-dev" aria-labelledby="t-dev" tabindex="0" hidden>
+
+    <div class="panel-head">
+      <p class="eyebrow">03 / dev-activity-monitor · monthly</p>
+      <h3>개발 활동 - 부서원 GitHub 산출과 작업 주제</h3>
+      <p class="stamp">갱신 2026-07-31 (0일 전) · 회차 1 · 기간 2026-07-01~07-31 · 조회 호스트 github.com</p>
+      <p class="headline">
+        부서원 4명 중 2명이 공개 활동의 전량(커밋 1,369건·머지 521건)을 만들고 나머지 2명은 7월 공개 활동이 사실상 0인데,
+        이는 활동 유무가 아니라 <strong>작업 무대가 조회 범위 밖에 있다는 관측 공백</strong>이며,
+        동시에 <strong>팀 전체 코드 리뷰가 4명 모두 0건</strong>이라 개인 산출이 상호 검증 없이 진행되고 있다.
+      </p>
+      <div class="card-foot" style="border-top:0; padding-top:12px; margin-top:2px">
+        <span class="badge b-ok"><span class="dot" aria-hidden="true"></span>최신<span class="age">0일 전</span></span>
+        <a class="link" href="https://claude.ai/code/artifact/0ab0fdce-68e3-46c5-9222-5f233fd97a15" target="_blank" rel="noopener">전용 대시보드에서 상세 보기<span class="ext">↗</span></a>
+        <span class="sep">|</span>
+        <button class="cmd" type="button" data-cmd="/dev-activity">/dev-activity</button>
+      </div>
+    </div>
+
+    <div class="note privacy">
+      <p><strong>이 탭은 부서원 실명과 개인별 산출 지표를 포함한다.</strong>
+      아래 수치는 <strong>부분 관측</strong>이다 - 사내 GitHub Enterprise는 조회 대상이 아니고,
+      조회 토큰이 대상자 중 한 명(<code>myungjoo</code>)의 계정이어서 그 한 명만 비공개 기여가 집계에 들어온다.
+      나머지 3명의 <code>0</code>은 "없음"이 아니라 <strong>"보이지 않음"</strong>일 수 있다.
+      또한 4명 전원의 팀·역할·담당 영역이 미기입이라 역할 맥락 없이 제시된 값이다.
+      <strong>인원 간 수치 비교와 인사 평가 용도로 쓸 수 없다.</strong></p>
+    </div>
+
+    <h2 class="sec" style="margin-top:22px">인원별 산출 (2026-07)</h2>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr>
+            <th>인원</th><th class="num">커밋</th><th class="num">PR 머지</th><th class="num">리뷰</th><th class="num">활동일</th><th>지금 하는 일</th><th>신호</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="who">MyungJoo Ham</span><span class="id">myungjoo</span></td>
+            <td class="num">794</td><td class="num">496</td><td class="num">0</td><td class="num">24일</td>
+            <td>기여 기반 평가 에이전트 - 실데이터 수집 경로를 순수 컴포저로 분리, latency 측정 하네스 배선, 백업 dump import/export 계약 정합, 로컬 LLM 런너 연결. 단일 레포 집중도 100%.</td>
+            <td><span class="tag flag">과부하</span> <span class="tag flag">리뷰 0</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Geunsik Lim</span><span class="id">leemgs</span></td>
+            <td class="num">575</td><td class="num">25</td><td class="num">0</td><td class="num">27일</td>
+            <td>데이터셋 법적 리스크 검토 에이전트(Beagle) 운용·개선, 시스템 SW 논문·재현 패키지 8건 병행(커널 오토튜닝·계층 메모리·커널 스케줄링), 웨비나 자동 수집 시스템. 25개 레포 분산.</td>
+            <td><span class="tag flag">정체 5건</span> <span class="tag flag">리뷰 0</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">Sangjung Woo</span><span class="id">again4you</span></td>
+            <td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">1일</td>
+            <td>주제 파악 불가 - 7월 공개 기여 07-02 단 1건. 상반기 공개 활동 20건 전량 nnstreamer 계열이며 리뷰 8건 &gt; 커밋 3건인 저volume·리뷰 중심 패턴.</td>
+            <td><span class="tag gap">관측 공백</span></td>
+          </tr>
+          <tr>
+            <td><span class="who">(미공개)</span><span class="id">jaeyun-jung</span></td>
+            <td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0일</td>
+            <td>주제 파악 불가 - 7월 공개 기여 0건(API 조회 성공, ID 오기입 아님). 상반기 62건 전량 On-Device 스트리밍 런타임 계열(nnstreamer·MLAgent·nnstreamer-edge).</td>
+            <td><span class="tag gap">관측 공백</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="footnote">
+      팀 합계 커밋 1,369 · PR 머지 521 · 머지율 99.8% · 리뷰 0 · 사이클 타임 중앙값 0.1시간.
+      머지율 99.8%와 6분 사이클 타임은 프로세스가 빠르다는 신호가 아니라 <strong>리뷰 게이트가 없다는 신호</strong>이며, 개인 속도 지표로 읽어선 안 된다.
+    </p>
+
+    <h2 class="sec" style="margin-top:26px">임원이 확인할 것</h2>
+    <ol class="marked">
+      <li><strong>검토 종결 단계가 병목이다.</strong> <code>aigovsensing/dataset-review</code>의 검토 이슈 5건(AW_FB · GSM8K · GLOBEM · TOFU · LifeSnaps)이 자동 검토 결과 게시 후 14~16일간 종결 없이 멈춰 있다. 5건 모두 같은 레포·같은 워크플로이므로 개인 지연이 아니다 - <strong>판정 권한이 누구에게 있는지</strong>가 불명확하면 앞으로 들어오는 모든 검토가 같은 지점에서 멈춘다.</li>
+      <li><strong>상호 검증 절차가 공개 범위에 존재하지 않는다.</strong> 관측된 PR 521건 중 리뷰가 붙은 것이 0건이다. 실제로 self-merge 중인지, 리뷰가 사내 Enterprise에서 이루어지는지 이 데이터로는 구분되지 않는다.</li>
+      <li><strong>핵심 기술 축 하나가 전혀 보이지 않는다.</strong> On-Device 스트리밍 런타임(nnstreamer 계열) 담당 2명의 7월 공개 활동이 0~1건이다. 이번 회차 최대의 관측 결손이다.</li>
+      <li><strong>다음 회차의 판단 가치를 만들려면 선행 조건 3개가 필요하다.</strong> 로스터의 팀·역할·담당 영역 기입(4명 전원 공백), 사내 Enterprise 호스트 조회 경로 확보, 검토 이슈 5건의 판정 주체 확인. 앞의 둘이 없으면 매달 같은 관측 공백이 반복된다.</li>
+    </ol>
+
+    <h2 class="sec" style="margin-top:26px">보유 데이터 원장</h2>
+    <div class="subgrid">
+      <dl class="kv">
+        <dt>대상 인원</dt><dd><span class="n">4</span>명 (로스터)</dd>
+        <dt>활동 관측 인원</dt><dd><span class="n">3</span>명</dd>
+        <dt>스냅샷</dt><dd><span class="n">1</span>건</dd>
+        <dt>정체 항목</dt><dd><span class="n">5</span>건 (14일 이상 무진전)</dd>
+        <dt>마지막 수집</dt><dd><span class="n">2026-07-31</span></dd>
+      </dl>
+      <div class="note">
+        <p><strong>기준선 수집 회차이므로 전월 대비 추이가 없다.</strong>
+        활동 급감 판정은 비교 대상이 없어 수행하지 않았고,
+        <code>again4you</code>·<code>jaeyun-jung</code>의 7월 0건도 급감으로 판정하지 않았다.
+        추이는 2026-08 회차부터 제공된다.</p>
+      </div>
+    </div>
+
+    <details class="hist" style="margin-top:14px">
+      <summary>회차 이력 (1회차)</summary>
+      <div class="hist-body">
+        <div class="hist-row">
+          <span class="when">2026-07</span>
+          <p>기준선 회차 - 공개 산출이 2명에 집중됐으나 상당 부분이 관측 편향이며, 팀 전체 리뷰 0건과 검토 이슈 5건 정체가 확인됐다.</p>
+        </div>
+      </div>
+    </details>
+  </section>
+
+</main>
+
+<footer class="shell" style="padding-bottom:40px">
+  <p class="footnote" style="border-top:1px solid var(--line); padding-top:14px">
+    커맨드를 복사해 Claude Code 터미널에 붙여넣으면 해당 에이전트가 실행됩니다.
+    이 페이지는 에이전트를 직접 실행하지 않으며, 각 에이전트가 남긴 리포트와 상태 파일만 읽어 집계합니다.
+    <br>레지스트리 <code>hub/config/agents.md</code> · 신선도 스냅샷 <code>hub/state/hub-index.json</code> · 집계 기준일 2026-07-31
+  </p>
+</footer>
+
+<script>
+(function () {
+  var HASHES = { "t-all": "#tab-all", "t-tech": "#tab-tech", "t-invest": "#tab-invest", "t-dev": "#tab-dev" };
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+
+  function select(tabId, updateHash, focus) {
+    if (!HASHES[tabId]) { tabId = "t-all"; }
+    tabs.forEach(function (tab) {
+      var on = tab.id === tabId;
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
+      var panel = document.getElementById(tab.getAttribute("aria-controls"));
+      if (panel) { panel.hidden = !on; }
+      if (on && focus) { tab.focus(); }
+    });
+    if (updateHash && location.hash !== HASHES[tabId]) {
+      history.replaceState(null, "", HASHES[tabId]);
+    }
+  }
+
+  function fromHash() {
+    var h = location.hash;
+    for (var id in HASHES) { if (HASHES[id] === h) { return id; } }
+    return "t-all";
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener("click", function () { select(tab.id, true, false); });
+    tab.addEventListener("keydown", function (e) {
+      var i = tabs.indexOf(tab), next = null;
+      if (e.key === "ArrowRight") { next = tabs[(i + 1) % tabs.length]; }
+      else if (e.key === "ArrowLeft") { next = tabs[(i - 1 + tabs.length) % tabs.length]; }
+      else if (e.key === "Home") { next = tabs[0]; }
+      else if (e.key === "End") { next = tabs[tabs.length - 1]; }
+      if (next) { e.preventDefault(); select(next.id, true, true); }
+    });
+  });
+
+  window.addEventListener("hashchange", function () { select(fromHash(), false, false); });
+  select(fromHash(), false, false);
+
+  // Command chips: copy to clipboard only. This page cannot run agents.
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest("button.cmd") : null;
+    if (!btn) { return; }
+    var cmd = btn.getAttribute("data-cmd");
+    var label = btn.textContent;
+
+    function done() {
+      btn.setAttribute("data-state", "done");
+      btn.textContent = "복사됨 " + cmd;
+      setTimeout(function () {
+        btn.removeAttribute("data-state");
+        btn.textContent = label;
+      }, 1500);
+    }
+
+    function toast(msg) {
+      var el = document.getElementById("copy-toast");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "copy-toast";
+        el.setAttribute("role", "status");
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+      el.setAttribute("data-on", "1");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(function () { el.removeAttribute("data-on"); }, 6000);
+    }
+
+    function selectChip() {
+      // Clipboard unavailable: leave the command visibly selected for manual copy.
+      btn.setAttribute("data-state", "manual");
+      btn.textContent = cmd;
+      var range = document.createRange();
+      range.selectNodeContents(btn);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      toast("클립보드를 쓸 수 없는 환경입니다. 선택된 커맨드를 Ctrl+C(⌘C)로 복사하세요.");
+    }
+
+    function fallback() {
+      var ok = false;
+      var range = document.createRange();
+      range.selectNodeContents(btn);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+      if (ok) {
+        sel.removeAllRanges();
+        done();
+      } else {
+        selectChip();
+      }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(cmd).then(function () { done(); }, fallback);
+    } else {
+      fallback();
+    }
+  });
+})();
+</script>
