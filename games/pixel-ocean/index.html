@@ -253,7 +253,7 @@
       <li>위 단계 생물(머리 위 <b style="color:#c62828">!</b>)에게 세 번 물리면 이번 단계 성장치를 잃고 다른 곳에서 다시 시작합니다.</li>
       <li>동족(머리 위 <b style="color:#c2185b">♥</b>, 미니맵 분홍 점)은 드뭅니다. 닿으면 바로 번식해 갯지렁이를 낳습니다.</li>
       <li>갯지렁이를 먹으면 20초 동안 성장 속도가 3배가 됩니다. 어느 종이든 먹을 수 있습니다.</li>
-      <li>메갈로돈이 되면 바다 맨 밑의 거대 조개를 먹으러 갈 수 있습니다.</li>
+      <li>메갈로돈이 되면 바다 맨 밑의 거대 조개를 먹으러 갈 수 있습니다. 조개를 모두 먹으면…</li>
     </ul>
     <dl class="keys">
       <dt><kbd>MOUSE</kbd><kbd>TOUCH</kbd></dt><dd>가리키는 쪽으로 헤엄</dd>
@@ -534,6 +534,7 @@ let p, ents = [], parts = [], elapsed = 0, eaten = 0, deaths = 0, clock = 0;
 const cam = { x: 0, y: 0 };
 let viewBase = 180, shake = 0, flash = 0, flashColor = '255,255,255';
 let spawnTimer = 0, bubbleTimer = 0, nextId = 1, miniTick = 0;
+let finaleT = 0, swallowed = false;
 let spits = [], worms = [], clams = [], mateSpawnCd = 0, bred = 0, megaTime = 0, clamHintShown = false;
 const keys = new Set();
 const pointer = { x: 0, y: 0, active: false, touch: false };
@@ -575,7 +576,7 @@ function spawn(tier, initial) {
 function reset() {
   p = { tier: 1, x: WORLD.w / 2, y: 160, vx: 0, vy: 0, face: 1, hp: HP_MAX, inv: 2, xp: 0, dash: 0, dashCd: 0, spitCd: 0, t: 0, boost: 0, breedCd: 0 };
   ents = []; parts = []; worms = []; spits = []; elapsed = 0; eaten = 0; deaths = 0; shake = 0; flash = 0;
-  mateSpawnCd = MATE_RESPAWN; bred = 0; megaTime = 0; clamHintShown = false;
+  mateSpawnCd = MATE_RESPAWN; bred = 0; megaTime = 0; clamHintShown = false; finaleT = 0; swallowed = false;
   clams = [];
   for (let i = 0; i < CLAM_COUNT; i++) {
     const x = Math.round(WORLD.w * (i + 0.5) / CLAM_COUNT + rand(-120, 120));
@@ -647,6 +648,7 @@ function restore(d) {
   $('startScreen').hidden = true; $('endScreen').hidden = true;
   lastSec = -1; hudKey = '';
   if (d.state === 'clear') { megaClear(); return true; }
+  if (clams.length && clams.every(c => c.eaten)) { $('hud').hidden = true; startFinale(); return true; }
   state = 'play'; paused = true;
   $('hud').hidden = false; $('pauseScreen').hidden = false;
   refreshHud(true); placeCamera();
@@ -773,8 +775,98 @@ function megaClear() {
 function clamsDone() {
   state = 'end';
   clearSave();
-  showEnd({ eyebrow: 'King of the Deep', title: '거대 조개까지 모두 먹었습니다', label: '전체 플레이 시간', time: elapsed,
-    note: `메갈로돈 도달 ${fmtKo(megaTime)} · 번식 ${bred}회`, canContinue: false });
+  try { const b = parseFloat(localStorage.getItem('pixelOcean.best')); if (b > 0) $('endBest').textContent = fmtKo(b); } catch (e) {}
+  showEnd({ eyebrow: 'The End', title: '메갈로돈이 바다를 삼켰습니다', label: '전체 플레이 시간', time: elapsed,
+    note: `메갈로돈 도달 ${fmtKo(megaTime)} · 거대 조개 ${CLAM_COUNT}개 · 번식 ${bred}회`, canContinue: false });
+}
+
+/* ================= 엔딩 연출: 거대해진 메갈로돈이 바다를 삼킨다 =================
+   0.0-1.0s 떨림·번쩍임 → 1.0-3.6s 몸집이 화면을 덮을 만큼 커짐 → 2.0s~ 모든 것이 입으로 빨려듦
+   → 3.6-6.4s 입에서 어둠이 퍼져 바다가 사라짐 → 6.4-7.8s 어둠 속 붉은 눈 → 엔딩 화면 */
+const FIN = { grow: [1.0, 3.6], suck: 2.0, maw: [3.6, 6.4], end: 7.8 };
+const ease = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
+const span = (t, [a, b]) => (t - a) / (b - a);
+function startFinale() {
+  state = 'finale'; finaleT = 0; paused = false;
+  keys.clear(); spits = [];
+  $('hud').hidden = true; $('pauseScreen').hidden = true;
+  p.vx = p.vy = 0; p.inv = 0;
+  toast('마지막 거대 조개를 삼켰다…', 'good');
+}
+function megaScale() {
+  const max = Math.max(4, cv.width * 1.15 / SPECIES[6].w);
+  return 1 + ease(span(finaleT, FIN.grow)) * (max - 1);
+}
+function mouthPos() {
+  const sp = SPECIES[6], k = megaScale();
+  return { x: p.x + p.face * (sp.w / 2 - 3) * k, y: p.y + 2.5 * k };
+}
+function updateFinale(dt) {
+  const prev = finaleT;
+  finaleT += dt; clock += dt; p.t += dt;
+  const at = s => prev < s && finaleT >= s;
+  if (at(FIN.grow[0])) toast('메갈로돈이 거대해진다!', 'good');
+  if (at(FIN.maw[0])) toast('바다를 집어삼킨다!', 'bad');
+  if (finaleT < FIN.grow[0]) { shake = 0.1; if (Math.random() < dt * 30) bubble(p.x + rand(-20, 20), p.y + rand(-8, 8)); }
+  else if (finaleT < FIN.maw[1]) shake = 0.1;
+  // 빨아들이기
+  const m = mouthPos();
+  if (finaleT > FIN.suck) {
+    const pull = 60 + (finaleT - FIN.suck) * 160;
+    const eat = arr => arr.filter(o => {
+      const dx = m.x - o.x, dy = m.y - o.y, d = Math.hypot(dx, dy) || 1;
+      o.x += dx / d * Math.min(d, pull * dt) + (-dy / d) * pull * 0.25 * dt;   // 소용돌이
+      o.y += dy / d * Math.min(d, pull * dt) + (dx / d) * pull * 0.25 * dt;
+      return d > 6;
+    });
+    ents = eat(ents); worms = eat(worms);
+    // 입으로 빨려드는 물줄기
+    const vw = cv.width, vh = cv.height;
+    for (let i = 0; i < 6; i++) {
+      const edge = Math.random() * 4 | 0;
+      const x = cam.x + (edge === 0 ? 0 : edge === 1 ? vw : Math.random() * vw);
+      const y = cam.y + (edge === 2 ? 0 : edge === 3 ? vh : Math.random() * vh);
+      const dx = m.x - x, dy = m.y - y, d = Math.hypot(dx, dy) || 1, v = 160 + Math.random() * 120;
+      parts.push({ x, y, vx: dx / d * v, vy: dy / d * v, life: d / v, size: Math.random() < 0.3 ? 2 : 1, color: 'rgba(214,246,255,.8)' });
+    }
+  }
+  for (const q of parts) { q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; }
+  parts = parts.filter(q => q.life > 0);
+  shake = Math.max(0, shake - dt); flash = Math.max(0, flash - dt * 1.6);
+  if (finaleT >= FIN.end) { swallowed = true; clamsDone(); }
+}
+function drawFinale(cx, cy) {
+  const vw = cv.width, vh = cv.height, sp = SPECIES[6], k = megaScale();
+  const m = mouthPos(), mx = Math.round(m.x - cx), my = Math.round(m.y - cy);
+  // 입에서 퍼지는 어둠 (6px 블록 원)
+  const r = ease(span(finaleT, FIN.maw)) * Math.hypot(vw, vh) * 1.1;
+  if (r > 0) {
+    const B = 6;
+    for (let y = -mod(my, B) - B; y < vh + B; y += B) {
+      const dy = y + B / 2 - my;
+      if (Math.abs(dy) > r) continue;
+      const half = Math.sqrt(r * r - dy * dy), x0 = Math.floor((mx - half) / B) * B, x1 = Math.ceil((mx + half) / B) * B;
+      ctx.fillStyle = '#1a0710'; ctx.fillRect(x0 - B, y, x1 - x0 + 2 * B, B);   // 가장자리 핏빛 테두리
+      ctx.fillStyle = '#02060d'; ctx.fillRect(x0, y, x1 - x0, B);
+    }
+  }
+  // 거대해진 메갈로돈 (마지막엔 실루엣으로)
+  const w = Math.round(sp.w * k), h = Math.round(sp.h * k);
+  const sx = Math.round(p.x - cx - w / 2), sy = Math.round(p.y - cy - h / 2);
+  const fr = Math.floor(p.t * (finaleT < FIN.grow[1] ? 5 : 2)) % 2;
+  const blinkWhite = finaleT < FIN.grow[0] && Math.floor(finaleT * 10) % 2 === 0;
+  const fade = ease(span(finaleT, [FIN.maw[1], FIN.maw[1] + 0.8]));
+  ctx.globalAlpha = 1 - fade * 0.85;
+  ctx.drawImage(p.face < 0 ? sp.imgL[fr] : sp.img[fr], sx, sy, w, h);
+  ctx.globalAlpha = 1;
+  if (blinkWhite) { ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(0, 0, vw, vh); }
+  // 어둠 속에 남는 붉은 눈
+  if (fade > 0) {
+    const ex = p.x + p.face * (sp.w / 2 - 5.5) * k - cx, ey = p.y + (8.5 - sp.h / 2) * k - cy;
+    const glow = Math.floor(finaleT * 4) % 2 ? 1 : 0.7;
+    ctx.fillStyle = `rgba(255,59,48,${glow})`;
+    ctx.fillRect(Math.round(ex - k), Math.round(ey - k / 2), Math.max(2, Math.round(k * 2)), Math.max(2, Math.round(k)));
+  }
 }
 function spawnWorms(x, y, n) {
   for (let i = 0; i < n; i++) {
@@ -937,7 +1029,7 @@ function update(dt) {
         const left = clams.filter(k => !k.eaten).length;
         toast(left ? `거대 조개를 먹었다! 남은 조개 ${left}개` : '거대 조개를 모두 먹었다!', 'good');
         refreshHud(true);
-        if (!left) clamsDone();
+        if (!left) startFinale();
       } else if (p.tier < 6 && !clamHintShown && d < 60) {
         clamHintShown = true; toast('거대 조개는 메갈로돈만 먹을 수 있다');
       }
@@ -1007,6 +1099,9 @@ function resizeView() {
 }
 function placeCamera() {
   const vw = cv.width, vh = cv.height;
+  if (state === 'finale') {
+    cam.x = p.x - vw / 2; cam.y = p.y - vh / 2; return;
+  }
   if (state === 'play' || state === 'end') {
     cam.x = p.x - vw / 2; cam.y = p.y - vh / 2;
   } else {
@@ -1022,6 +1117,7 @@ const floorTop = bx => WORLD.h - (1 + Math.floor(hash(Math.floor(bx / 3) + 77) *
 function draw() {
   ctx.imageSmoothingEnabled = false;
   const vw = cv.width, vh = cv.height;
+  if (swallowed) { ctx.fillStyle = '#02060d'; ctx.fillRect(0, 0, vw, vh); return; }
   let cx = Math.round(cam.x), cy = Math.round(cam.y);
   if (shake > 0 && !REDUCED) { cx += Math.round(rand(-2, 2)); cy += Math.round(rand(-2, 2)); }
 
@@ -1146,7 +1242,8 @@ function draw() {
   }
 
   // 플레이어
-  if (state === 'play' || state === 'end') {
+  if (state === 'finale') drawFinale(cx, cy);
+  else if (state === 'play' || state === 'end') {
     const sp = SPECIES[p.tier];
     const visible = p.inv <= 0 || Math.floor(clock * 12) % 2 === 0 || state === 'end';
     const sx = Math.round(p.x - sp.w / 2 - cx), sy = Math.round(p.y - sp.h / 2 - cy);
@@ -1249,7 +1346,8 @@ function tickHud() {
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  if (!(state === 'play' && paused) && state !== 'clear') {
+  if (state === 'finale') { updateFinale(dt); placeCamera(); }
+  else if (!(state === 'play' && paused) && state !== 'clear') {
     if (state === 'play') elapsed += dt;
     viewBase += (targetBase(p.tier) - viewBase) * Math.min(1, dt * 2);
     resizeView();
