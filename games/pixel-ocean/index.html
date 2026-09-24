@@ -26,7 +26,7 @@
   }
   [hidden] { display: none !important; }
   html, body { height: 100%; overscroll-behavior: none; }
-  body { -webkit-font-smoothing: none; font-smooth: never; }
+  body { -webkit-font-smoothing: none; font-smooth: never; word-break: keep-all; }
   body {
     background: var(--abyss);
     color: var(--foam);
@@ -269,6 +269,7 @@
       <li>동족(머리 위 <b style="color:#c2185b">♥</b>, 미니맵 분홍 점)은 드뭅니다. 닿으면 바로 번식해 갯지렁이를 낳습니다.</li>
       <li>갯지렁이를 먹으면 20초 동안 성장 속도가 3배가 됩니다. 어느 종이든 먹을 수 있습니다.</li>
       <li>태어날 때와 진화할 때마다 스킨을 고릅니다: 기본, 분홍 공주, 어린 아이. 고르는 동안 게임이 멈춥니다.</li>
+      <li>아주 드물게 <b style="color:#3f7a1f">좀비 메갈로돈</b>이 나타납니다. 바다의 최상위 포식자로, 닿으면 하트와 상관없이 바로 게임 오버입니다. 침을 맞으면 1초 동안만 멈춥니다.</li>
       <li>메갈로돈이 되면 바다 맨 밑의 거대 조개를 먹으러 갈 수 있습니다. 조개를 모두 먹으면…</li>
     </ul>
     <dl class="keys">
@@ -335,6 +336,10 @@ const DASH_CD = 2.2;
 const BOOST_TIME = 20, BOOST_MUL = 3;   // 갯지렁이 효과
 const MATE_RESPAWN = 28;                // 동족 재등장 간격(초): 동족은 드물어야 한다
 const CLAM_COUNT = 3;
+const ZOMBIE = 7;                    // 좀비 메갈로돈: 최상위 포식자, 닿으면 즉사
+const ZOMBIE_MEAN_WAIT = 420;        // 평균 등장 간격(초) — 아주 드물게
+const ZOMBIE_GRACE = 90;             // 게임 시작 후 이 시간 동안은 나오지 않는다
+const ZOMBIE_STAY = 45;              // 이 시간이 지나면 떠난다
 const SPIT_CD = 0.9, SPIT_SPEED = 230, SPIT_LIFE = 0.75, STUN_TIME = 3;
 const SAVE_KEY = 'pixelOcean.save';
 
@@ -468,6 +473,13 @@ const MEGA0 = [
   '....................G...................',
 ];
 
+// 좀비 메갈로돈 = 메갈로돈 골격에 찢긴 지느러미와 드러난 갈비뼈
+const ZOMBIE_ROWS = pad(MEGA0).map((r, y) => [...r].map((ch, x) => {
+  if (y <= 1 && x % 2) return '.';                                                  // 찢긴 등지느러미
+  if (y >= 7 && y <= 10 && x >= 12 && x <= 24 && 'gsl'.includes(ch)) return x % 2 ? 'b' : 'x';   // 갈비뼈
+  if (y === 12 && x % 5 === 0 && ch !== '.') return '.';                              // 뜯긴 배
+  return ch;
+}).join(''));
 const SPECIES = [
   { name: '플랑크톤', speed: 10, y: [0.03, 0.7], color: '#7affc8', face: false,
     pal: { c: '#6cf2b8', C: '#effff8' }, frames: [['.c.', 'cCc', '.c.'], ['...', '.C.', '...']] },
@@ -483,6 +495,9 @@ const SPECIES = [
     pal: { g: '#8795a3', G: '#56626e', l: '#e8edf0', W: '#ffffff', r: '#a3232b', K: '#111111' }, frames: [SHARK0, wag(SHARK0, 6)] },
   { name: '메갈로돈', speed: 84, y: [0.3, 0.95], color: '#48535f', face: true,
     pal: { g: '#48535f', G: '#252c35', l: '#b7c0c8', s: '#727e8a', W: '#ffffff', r: '#6e1016', K: '#ff3b30' }, frames: [MEGA0, wag(MEGA0, 7)] },
+  { name: '좀비 메갈로돈', speed: 92, y: [0.15, 0.95], color: '#7dff5a', face: true,
+    pal: { g: '#5f7a58', G: '#26331f', l: '#a3b38c', s: '#3b2a2a', W: '#e8e2c8', r: '#3a0f12', K: '#9dff4a', b: '#efe9d6', x: '#8a2f3a' },
+    frames: [ZOMBIE_ROWS, wag(ZOMBIE_ROWS, 7)] },
 ];
 for (const sp of SPECIES) {
   sp.img = sp.frames.map(f => paint(f, sp.pal));
@@ -536,7 +551,7 @@ function buildSkin(sp, kind) {
   });
   return { img, imgL: sp.face ? img.map(flip) : img, pad: padTop };
 }
-const SKINS = SPECIES.map((sp, t) => t === 0 ? null : [
+const SKINS = SPECIES.map((sp, t) => t === 0 || t > 6 ? null : [
   { name: '기본', img: sp.img, imgL: sp.imgL, pad: 0 },
   { name: '분홍 공주', ...buildSkin(sp, 1) },
   { name: '어린 아이', ...buildSkin(sp, 2) },
@@ -961,7 +976,7 @@ function drawFinale(cx, cy) {
   const sk = skinOf();
   const w = Math.round(sp.w * k), h = Math.round((sp.h + sk.pad) * k);
   const sx = Math.round(p.x - cx - w / 2), sy = Math.round(p.y - cy - sp.h * k / 2 - sk.pad * k);
-  const fr = Math.floor(p.t * (finaleT < FIN.grow[1] ? 5 : 2)) % 2;
+  const fr = Math.floor(p.t * (finaleT < FIN.grow[1] ? 5 : 2)) & 1;
   const blinkWhite = finaleT < FIN.grow[0] && Math.floor(finaleT * 10) % 2 === 0;
   const fade = ease(span(finaleT, [FIN.maw[1], FIN.maw[1] + 0.8]));
   ctx.globalAlpha = 1 - fade * 0.85;
@@ -982,6 +997,22 @@ function spawnWorms(x, y, n) {
     worms.push({ x: x + Math.cos(a) * rand(10, 26), y: Math.min(WORLD.h - FLOOR_CLEAR, y + Math.sin(a) * rand(8, 18)),
       vx: Math.cos(a) * 20, vy: Math.sin(a) * 20, t: rand(0, 2), life: 30, face: Math.random() < 0.5 ? -1 : 1 });
   }
+}
+function zombieGameOver(z) {
+  state = 'end'; p.dead = true; deaths++;
+  clearSave();
+  burst(p.x, p.y, '#ff3b30', 40); burst(p.x, p.y, '#9dff4a', 30);
+  shake = 0.8; flash = 0.9; flashColor = '120,0,0';
+  z.vx = z.vy = 0;
+  $('hud').hidden = true;
+  toast('좀비 메갈로돈에게 잡아먹혔다', 'bad');
+  const victim = p;
+  setTimeout(() => {
+    if (p !== victim || state !== 'end') return;   // 그 사이 새 게임을 시작했으면 무시
+    $('endArt').src = iconURL(SPECIES[ZOMBIE].img[0], 8);
+    showEnd({ eyebrow: 'Game Over', title: '좀비 메갈로돈에게 잡아먹혔습니다', label: '플레이 시간', time: elapsed,
+      note: `${SPECIES[p.tier].name} 단계에서 즉사 · 번식 ${bred}회`, canContinue: false });
+  }, 1400);
 }
 const gainXp = base => { p.xp += base * (p.boost > 0 ? BOOST_MUL : 1); };
 const fmtKo = s => {
@@ -1039,10 +1070,12 @@ function updateEntity(e, dt, playing) {
   }
   if (e.tier === 0) {
     dvx = Math.cos(e.t * 0.7 + e.id) * sp.speed; dvy = Math.sin(e.t * 0.9 + e.id * 1.3) * sp.speed * 0.6;
-  } else if (playing && e.tier > p.tier && e.cool <= 0 && d < 110 + sp.w * 2) {
+  } else if (e.tier === ZOMBIE && (e.stay -= dt) < 0) {
+    const v = sp.speed * 0.7; dvx = -dx / d * v; dvy = -dy / d * v * 0.4;   // 떠나는 중
+  } else if (playing && e.tier > p.tier && e.cool <= 0 && d < (e.tier === ZOMBIE ? 260 : 110 + sp.w * 2)) {
     e.chase += dt;
-    if (e.chase > 6) { e.chase = 0; e.cool = 3; }
-    const v = Math.min(sp.speed * 1.1, ps * 0.82);
+    if (e.chase > (e.tier === ZOMBIE ? 9 : 6)) { e.chase = 0; e.cool = e.tier === ZOMBIE ? 4 : 3; }
+    const v = e.tier === ZOMBIE ? Math.min(sp.speed, ps * 0.9) : Math.min(sp.speed * 1.1, ps * 0.82);
     dvx = dx / d * v; dvy = dy / d * v; e.alert = true;
   } else if (playing && e.mated) {
     const v = sp.speed * 0.8; dvx = -dx / d * v; dvy = -dy / d * v * 0.5;
@@ -1069,13 +1102,17 @@ function update(dt) {
   clock += dt;
   const playing = state === 'play';
   if (playing) updatePlayer(dt);
-  for (const e of ents) updateEntity(e, dt, playing);
+  for (const e of ents) {
+    updateEntity(e, dt, playing);
+    if (e.tier === ZOMBIE && Math.random() < dt * 12) parts.push({ x: e.x + rand(-16, 16), y: e.y + rand(-4, 6), vx: rand(-4, 4), vy: rand(4, 12), life: 0.9, size: 1, color: 'rgba(157,255,74,.7)' });
+  }
 
   // 생태계: 바로 아래 단계를 잡아먹는다
   for (let i = 0; i < ents.length; i++) {
     const a = ents[i]; if (a.dead) continue;
     for (let j = i + 1; j < ents.length; j++) {
-      const b = ents[j]; if (b.dead || Math.abs(a.tier - b.tier) !== 1) continue;
+      const b = ents[j];
+      if (b.dead || (Math.abs(a.tier - b.tier) !== 1 && a.tier !== ZOMBIE && b.tier !== ZOMBIE) || a.tier === b.tier) continue;
       const pr = a.tier > b.tier ? a : b, py = pr === a ? b : a;
       if (Math.hypot(a.x - b.x, a.y - b.y) < SPECIES[pr.tier].r * 0.8 + SPECIES[py.tier].r * 0.6) py.dead = true;
       if (a.dead) break;
@@ -1094,6 +1131,8 @@ function update(dt) {
         burst(e.x, e.y, es.color, 8 + e.tier * 3);
         if (ps.need && p.xp >= ps.need) { evolve(); if (state !== 'play') break; }
         refreshHud();
+      } else if (e.tier === ZOMBIE && !(e.stun > 0) && d < ps.r * 0.8 + es.r * 0.8) {
+        zombieGameOver(e); break;
       } else if (e.tier > p.tier && p.inv <= 0 && !(e.stun > 0) && d < ps.r * 0.8 + es.r * 0.8) {
         p.hp--; p.inv = 1.4; shake = 0.35;
         p.vx = -dx / d * 170; p.vy = -dy / d * 170;
@@ -1159,7 +1198,7 @@ function update(dt) {
       const es = SPECIES[e.tier];
       if (Math.hypot(e.x - q.x, e.y - q.y) < es.r + 3) {
         const l = Math.hypot(q.vx, q.vy) || 1;
-        e.stun = STUN_TIME; e.cool = STUN_TIME + 3; e.alert = false;
+        e.stun = e.tier === ZOMBIE ? 1 : STUN_TIME; e.cool = e.stun + (e.tier === ZOMBIE ? 0.5 : 3); e.alert = false;
         e.vx = q.vx / l * 110; e.vy = q.vy / l * 110;
         burst(q.x, q.y, '#c8ffdc', 12);
         q.life = 0; break;
@@ -1174,10 +1213,16 @@ function update(dt) {
   spawnTimer -= dt; mateSpawnCd = Math.max(0, mateSpawnCd - dt);
   if (spawnTimer <= 0) {
     spawnTimer = 0.5;
-    const tg = populationTargets(p.tier), cnt = [0, 0, 0, 0, 0, 0, 0];
+    const tg = populationTargets(p.tier), cnt = [0, 0, 0, 0, 0, 0, 0, 0];
     const vr = viewRadius() + 30;
     // 번식을 마친 동족은 화면 밖으로 나가면 사라진다
-    ents = ents.filter(e => !(e.mated && Math.hypot(e.x - p.x, e.y - p.y) > vr));
+    ents = ents.filter(e => !((e.mated || (e.tier === ZOMBIE && e.stay < 0)) && Math.hypot(e.x - p.x, e.y - p.y) > vr));
+    if (state === 'play' && elapsed > ZOMBIE_GRACE && !ents.some(e => e.tier === ZOMBIE) && Math.random() < 0.5 / ZOMBIE_MEAN_WAIT) {
+      spawn(ZOMBIE, false);
+      ents[ents.length - 1].stay = ZOMBIE_STAY;
+      toast('좀비 메갈로돈이 나타났다! 닿으면 즉사', 'bad');
+      flash = 0.35; flashColor = '120,255,90';
+    }
     for (const e of ents) cnt[e.tier]++;
     for (let k = 0; k <= 6; k++) {
       if (k === p.tier) {
@@ -1318,7 +1363,7 @@ function draw() {
   // 갯지렁이
   for (const w of worms) {
     if (w.life < 3 && !blink) continue;
-    const img = (w.face < 0 ? WORM_L : WORM)[Math.floor(w.t * 4) % 2];
+    const img = (w.face < 0 ? WORM_L : WORM)[Math.floor(w.t * 4) & 1];
     ctx.drawImage(img, Math.round(w.x - img.width / 2 - cx), Math.round(w.y - img.height / 2 - cy));
   }
   // 생물 (작은 것부터)
@@ -1328,7 +1373,7 @@ function draw() {
     const sx = Math.round(e.x - sp.w / 2 - cx), sy = Math.round(e.y - sp.h / 2 - cy);
     const onScreen = sx + sp.w > 0 && sx < vw && sy + sp.h > 0 && sy < vh;
     if (onScreen) {
-      const fr = Math.floor(e.t * (e.tier === 0 ? 2 : 5)) % 2;
+      const fr = Math.floor(e.t * (e.tier === 0 ? 2 : 5)) & 1;
       ctx.drawImage(e.face < 0 ? sp.imgL[fr] : sp.img[fr], sx, sy);
       if (e.stun > 0) {
         const a = clock * 6, rx = Math.max(4, sp.w * 0.35);
@@ -1353,13 +1398,13 @@ function draw() {
   if (state === 'finale') drawFinale(cx, cy);
   else if (state === 'play' || state === 'end' || state === 'skin' || state === 'clear') {
     const sp = SPECIES[p.tier], sk = skinOf();
-    const visible = p.inv <= 0 || Math.floor(clock * 12) % 2 === 0 || state !== 'play';
+    const visible = !p.dead && (p.inv <= 0 || Math.floor(clock * 12) % 2 === 0 || state !== 'play');
     const sx = Math.round(p.x - sp.w / 2 - cx), sy = Math.round(p.y - sp.h / 2 - cy);
     if (visible) {
-      const fr = Math.floor(p.t * 5) % 2;
+      const fr = Math.floor(p.t * 5) & 1;
       ctx.drawImage(p.face < 0 ? sk.imgL[fr] : sk.img[fr], sx, sy - sk.pad);
     }
-    ctx.drawImage(MARKER, Math.round(p.x - cx) - 2, sy - sk.pad - 6 + (Math.floor(clock * 3) % 2));
+    if (!p.dead) ctx.drawImage(MARKER, Math.round(p.x - cx) - 2, sy - sk.pad - 6 + (Math.floor(clock * 3) % 2));
   }
 
   for (const q of spits) {
@@ -1386,8 +1431,8 @@ function drawMini() {
       if (p.tier === 1) { mctx.fillStyle = 'rgba(124,255,31,.55)'; mctx.fillRect(Math.round(e.x * s), Math.round(e.y * s), 1, 1); }
       continue;
     }
-    mctx.fillStyle = e.tier < p.tier ? '#7cff1f' : e.tier > p.tier ? '#ff5a5a' : '#ff6fb5';
-    const z = e.tier >= 4 ? 3 : 2;
+    mctx.fillStyle = e.tier === ZOMBIE ? (Math.floor(clock * 4) % 2 ? '#9dff4a' : '#ffffff') : e.tier < p.tier ? '#7cff1f' : e.tier > p.tier ? '#ff5a5a' : '#ff6fb5';
+    const z = e.tier === ZOMBIE ? 5 : e.tier >= 4 ? 3 : 2;
     mctx.fillRect(Math.round(e.x * s) - 1, Math.round(e.y * s) - 1, z, z);
   }
   mctx.fillStyle = '#ffd23f';
@@ -1406,6 +1451,7 @@ for (let k = 1; k <= 6; k++) {
 }
 const chain = $('chain');
 SPECIES.forEach((sp, k) => {
+  if (k > 6) return;
   const li = document.createElement('li');
   li.className = k === 0 ? 'food' : k === 6 ? 'goal' : '';
   li.innerHTML = `<figure><div class="slot"><img class="px" alt="" src="${ICONS[k]}"></div><figcaption>${sp.name}${k === 0 ? '<br>(먹이)' : k === 6 ? '<br>(목표)' : ''}</figcaption></figure>`;
@@ -1453,7 +1499,13 @@ function tickHud() {
 /* ================= 루프 ================= */
 let last = performance.now();
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  // 다음 프레임을 먼저 예약: 한 프레임에서 예외가 나도 게임 루프가 멈추지 않는다
+  requestAnimationFrame(frame);
+  try { step(now); } catch (err) { console.error(err); }
+}
+function step(now) {
+  // rAF 타임스탬프가 performance.now()보다 앞설 수 있어 dt가 음수가 되지 않게 막는다
+  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
   if (state === 'finale') { updateFinale(dt); placeCamera(); }
   else if (!(state === 'play' && paused) && state !== 'clear' && state !== 'skin') {
     if (state === 'play') elapsed += dt;
@@ -1467,7 +1519,6 @@ function frame(now) {
     tickHud();
     if (++miniTick % 3 === 0) drawMini();
   }
-  requestAnimationFrame(frame);
 }
 addEventListener('resize', resizeView);
 
