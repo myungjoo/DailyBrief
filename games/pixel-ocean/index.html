@@ -120,6 +120,10 @@
     .hint { font-size: 14px; }
   }
 
+  #skipIntro {
+    position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+    font-family: var(--px); font-size: 14px; padding: 8px 12px;
+  }
   #toast {
     position: fixed; left: 50%; top: 26%; transform: translateX(-50%);
     font-family: var(--px); font-size: 30px; text-align: center;
@@ -259,6 +263,7 @@
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
+<button class="icon-btn" id="skipIntro" type="button" hidden>건너뛰기 ▸</button>
 
 <div class="overlay" id="startScreen">
   <div class="panel">
@@ -630,7 +635,7 @@ let p, ents = [], parts = [], elapsed = 0, eaten = 0, deaths = 0, clock = 0;
 const cam = { x: 0, y: 0 };
 let viewBase = 180, shake = 0, flash = 0, flashColor = '255,255,255';
 let spawnTimer = 0, bubbleTimer = 0, nextId = 1, miniTick = 0;
-let finaleT = 0, swallowed = false, skinAfter = null, megaZombieCd = 0, victoryT = 0;
+let finaleT = 0, swallowed = false, skinAfter = null, megaZombieCd = 0, victoryT = 0, introT = 0, HOME = null;
 const skinOf = () => SKINS[p.tier][p.skin || 0];
 let spits = [], worms = [], clams = [], mateSpawnCd = 0, bred = 0, megaTime = 0, clamHintShown = false;
 const keys = new Set();
@@ -671,7 +676,8 @@ function spawn(tier, initial) {
 }
 
 function reset() {
-  p = { tier: 1, x: WORLD.w / 2, y: 160, vx: 0, vy: 0, face: 1, hp: HP_MAX, inv: 2, xp: 0, dash: 0, dashCd: 0, spitCd: 0, t: 0, boost: 0, breedCd: 0, skin: 0 };
+  HOME = HOME || findHome();
+  p = { tier: 1, x: HOME.x, y: HOME.y - 12, vx: 0, vy: 0, face: 1, hp: HP_MAX, inv: 2, xp: 0, dash: 0, dashCd: 0, spitCd: 0, t: 0, boost: 0, breedCd: 0, skin: 0 };
   ents = []; parts = []; worms = []; spits = []; elapsed = 0; eaten = 0; deaths = 0; shake = 0; flash = 0;
   mateSpawnCd = MATE_RESPAWN; bred = 0; megaTime = 0; clamHintShown = false; finaleT = 0; swallowed = false;
   clams = [];
@@ -689,11 +695,13 @@ function reset() {
 /* ================= 입력 ================= */
 const KEYMAP = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd' };
 addEventListener('keydown', e => {
+  if (state === 'intro' && e.code === 'Space') { e.preventDefault(); endIntro(); return; }
   if (KEYMAP[e.code]) { keys.add(KEYMAP[e.code]); pointer.active = false; e.preventDefault(); }
   else if (e.code === 'Space') { e.preventDefault(); dash(); }
   else if (e.code === 'KeyF' || e.code === 'KeyJ') { e.preventDefault(); attack(); }
   else if (e.code === 'KeyP') togglePause();
   else if (e.code === 'Enter' && (state === 'title' || state === 'end')) startGame();
+  else if (state === 'intro' && e.code === 'Enter') { e.preventDefault(); endIntro(); }
   else if (state === 'skin' && /^(Digit|Numpad)[123]$/.test(e.code)) { e.preventDefault(); pickSkin(+e.code.slice(-1) - 1); }
 });
 addEventListener('keyup', e => { if (KEYMAP[e.code]) keys.delete(KEYMAP[e.code]); });
@@ -733,6 +741,7 @@ $('resumeBtn').addEventListener('click', togglePause);
 $('pauseBtn').addEventListener('click', togglePause);
 $('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); dash(); });
 $('spitBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); attack(); });
+$('skipIntro').addEventListener('click', endIntro);
 $('continueBtn').addEventListener('click', () => { const d = loadSave(); if (!d || !restore(d)) startGame(); });
 
 function serialize() {
@@ -771,8 +780,7 @@ function startGame() {
   reset();
   state = 'play'; paused = false;
   $('startScreen').hidden = true; $('endScreen').hidden = true; $('pauseScreen').hidden = true;
-  $('hud').hidden = false;
-  openSkinPicker(() => toast('플랑크톤을 먹고 성장하세요', 'good'));
+  openSkinPicker(startIntro);
 }
 function togglePause() {
   if (state !== 'play') return;
@@ -819,6 +827,57 @@ function toast(msg, kind) {
 }
 
 /* ================= 스킨 선택 (게임 정지) ================= */
+/* ================= 인트로: 해초 덤불에서 나와 두리번 ================= */
+// 월드 가운데에서 가장 가까운 바닥 자리를 '집'으로 삼아 해초 덤불을 둔다
+function findHome() {
+  const c = Math.floor(WORLD.w / 2 / 8);
+  for (let d = 0; d < 40; d++) for (const bx of [c + d, c - d]) {
+    if (floorTop(bx) === floorTop(bx + 1) && floorTop(bx) === floorTop(bx - 1)) return { x: bx * 8 + 4, y: floorTop(bx) };
+  }
+  return { x: WORLD.w / 2, y: floorTop(c) };
+}
+const INTRO = { out: [0.9, 2.1], look: [2.2, 4.4], end: 5.2 };
+const QMARK = paint(['.ooo.', 'o...o', '...o.', '..o..', '.....', '..o..'], { o: '#ffffff' });
+const EMARK = paint(['oo', 'oo', 'oo', 'oo', '..', 'oo'], { o: '#ffd23f' });
+function startIntro() {
+  state = 'intro'; introT = 0;
+  p.x = HOME.x; p.y = HOME.y - 12; p.vx = p.vy = 0; p.face = 1; p.inv = 0;
+  $('hud').hidden = true;
+  $('skipIntro').hidden = false;
+}
+function updateIntro(dt) {
+  const prev = introT; introT += dt;
+  const at = t => prev < t && introT >= t;
+  const u = ease(span(introT, INTRO.out));
+  p.x = HOME.x + u * 44; p.y = HOME.y - 12 - u * 22 + Math.sin(introT * 3) * 1.5;
+  p.t += dt * (introT < INTRO.out[1] ? 1.6 : 0.5);
+  // 두리번: 왼쪽 → 오른쪽 → 왼쪽 → 오른쪽
+  if (introT >= INTRO.look[0]) p.face = [-1, 1, -1, 1][Math.min(3, Math.floor(span(introT, INTRO.look) * 4))];
+  if (at(INTRO.out[0])) for (let i = 0; i < 10; i++) bubble(HOME.x + rand(-8, 8), HOME.y - rand(4, 24));
+  if (at(INTRO.look[0])) toast('여기는… 어디지?');
+  if (at(INTRO.look[1])) toast('배고파! 플랑크톤을 찾아 떠나자', 'good');
+  if (introT >= INTRO.end) endIntro();
+}
+function endIntro() {
+  if (state !== 'intro') return;
+  state = 'play'; last = performance.now();
+  $('skipIntro').hidden = true; $('hud').hidden = false;
+  refreshHud(true);
+}
+function drawHomeBush(cx, cy) {
+  // 앞쪽 해초 덤불: 생물이 이 뒤로 지나간다. 인트로에서 주인공이 여기서 나올 때 크게 흔들린다
+  const rustle = state === 'intro' && introT > INTRO.out[0] - 0.4 && introT < INTRO.out[1] ? 2.2 : 0.25;
+  const blades = [[-10, 7], [-6, 9], [-2, 11], [2, 8], [6, 10], [10, 6]];
+  blades.forEach(([ox, segs], i) => {
+    for (let s = 0; s < segs; s++) {
+      const sway = Math.round(Math.sin(clock * (rustle > 1 ? 9 : 1.3) + i * 1.7 + s * 0.4) * s * rustle * 0.5);
+      const x = Math.round(HOME.x + ox - cx + sway), y = Math.round(HOME.y - (s + 1) * 4 - cy);
+      ctx.fillStyle = s % 2 ? '#2f8f3f' : '#3fae4c'; ctx.fillRect(x, y, 3, 4);
+      if (s % 3 === 1) { ctx.fillStyle = '#56c95f'; ctx.fillRect(x + (i % 2 ? 3 : -2), y + 1, 2, 2); }
+    }
+  });
+}
+
 function openSkinPicker(after) {
   state = 'skin'; skinAfter = after; keys.clear(); pointer.active = false;
   $('skinTitle').textContent = `${SPECIES[p.tier].name} 스킨 고르기`;
@@ -1359,7 +1418,7 @@ function placeCamera() {
   if (state === 'finale') {
     cam.x = p.x - vw / 2; cam.y = p.y - vh / 2; return;
   }
-  if (state === 'play' || state === 'end' || state === 'victory') {
+  if (state === 'play' || state === 'end' || state === 'victory' || state === 'intro') {
     cam.x = p.x - vw / 2; cam.y = p.y - vh / 2;
   } else {
     cam.x = WORLD.w / 2 - vw / 2 + Math.sin(clock * 0.08) * 500; cam.y = 60 + Math.sin(clock * 0.05) * 60;
@@ -1507,7 +1566,7 @@ function draw() {
 
   // 플레이어
   if (state === 'finale') drawFinale(cx, cy);
-  else if (state === 'play' || state === 'end' || state === 'skin' || state === 'clear' || state === 'victory') {
+  else if (state === 'play' || state === 'end' || state === 'skin' || state === 'clear' || state === 'victory' || state === 'intro') {
     const sp = SPECIES[p.tier], sk = skinOf();
     const visible = !p.dead && (p.inv <= 0 || Math.floor(clock * 12) % 2 === 0 || state !== 'play');
     const sx = Math.round(p.x - sp.w / 2 - cx), sy = Math.round(p.y - sp.h / 2 - cy);
@@ -1520,8 +1579,15 @@ function draw() {
       ctx.fillStyle = '#ffffff';
       for (let i = -2; i <= 2; i++) { ctx.fillRect(mx + i * 3, my - 6 + o, 2, 3); ctx.fillRect(mx + i * 3 + 1, my + 4 - o, 2, 3); }
     }
-    if (!p.dead) ctx.drawImage(MARKER, Math.round(p.x - cx) - 2, sy - sk.pad - 6 + (Math.floor(clock * 3) % 2));
+    const hidden = state === 'intro' && introT < INTRO.out[0] + 0.5;
+    if (!p.dead && !hidden) ctx.drawImage(MARKER, Math.round(p.x - cx) - 2, sy - sk.pad - 6 + (Math.floor(clock * 3) % 2));
+    if (state === 'intro') {
+      const lk = span(introT, INTRO.look);
+      if (lk > 0 && lk < 0.75) ctx.drawImage(QMARK, Math.round(p.x - cx) + p.face * 4 - 2, sy - sk.pad - 14);
+      if (lk >= 0.75 && introT < INTRO.end) ctx.drawImage(EMARK, Math.round(p.x - cx) - 1, sy - sk.pad - 14);
+    }
   }
+  if (HOME && state !== 'title') drawHomeBush(cx, cy);
 
   for (const q of spits) {
     const x = Math.round(q.x - cx), y = Math.round(q.y - cy);
@@ -1629,6 +1695,7 @@ function step(now) {
   // rAF 타임스탬프가 performance.now()보다 앞설 수 있어 dt가 음수가 되지 않게 막는다
   const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
   if (state === 'finale') { updateFinale(dt); placeCamera(); }
+  else if (state === 'intro') { updateIntro(dt); update(dt); placeCamera(); }
   else if (!(state === 'play' && paused) && state !== 'clear' && state !== 'skin') {
     if (state === 'play') elapsed += dt;
     viewBase += (targetBase(p.tier) - viewBase) * Math.min(1, dt * 2);
