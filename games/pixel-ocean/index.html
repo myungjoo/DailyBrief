@@ -1,0 +1,992 @@
+<title>픽셀 바다 생존기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Silkscreen:wght@400;700&display=swap">
+<style>
+  /* 단일 테마: 게임 화면은 항상 심해(어두운 바다) + 마인크래프트식 회색 GUI 패널 */
+  :root {
+    --abyss: #061428;
+    --foam: #d6f6ff;
+    --foam-dim: #9cc7d6;
+    --xp: #7cff1f;
+    --xp-dark: #3a8a0c;
+    --danger: #ff5a5a;
+    --gold: #ffd23f;
+    --stone: #c6c6c6;
+    --stone-hi: #ffffff;
+    --stone-lo: #555555;
+    --stone-text: #3a3a3a;
+    --slot: #8b8b8b;
+    --btn: #6f6f6f;
+    --btn-hover: #6c7fc0;
+    --title: #173a5c;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    background: var(--abyss);
+    color: var(--foam);
+    overflow: hidden;
+    font-family: 'Silkscreen', 'Do Hyeon', system-ui, sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #game {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    display: block;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    touch-action: none;
+    cursor: crosshair;
+  }
+  .px { image-rendering: crisp-edges; image-rendering: pixelated; }
+
+  /* ---------- HUD ---------- */
+  .hud {
+    position: fixed; inset: 0; pointer-events: none;
+    padding-block: calc(env(safe-area-inset-top, 0px) + 12px) calc(env(safe-area-inset-bottom, 0px) + 12px);
+    padding-inline: 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .hud-top, .hud-bottom { display: flex; justify-content: space-between; gap: 12px; }
+  .hud-top { align-items: flex-start; }
+  .hud-bottom { align-items: flex-end; }
+  .status { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .stage { display: flex; align-items: center; gap: 8px; }
+  .stage img { height: 28px; width: auto; filter: drop-shadow(2px 2px 0 #000); }
+  .stage-name { font-family: 'Do Hyeon', sans-serif; font-size: 24px; line-height: 1; }
+  .stage-no { font-size: 12px; color: var(--foam-dim); }
+  .xp-row { display: flex; align-items: center; gap: 8px; }
+  .xpbar {
+    position: relative; width: min(300px, 48vw); height: 12px;
+    background: #0d0d0d; border: 2px solid #000;
+  }
+  .xpbar::after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), rgba(0,0,0,.75) calc(10% - 2px) 10%);
+  }
+  #xpfill { height: 100%; width: 0; background: var(--xp); box-shadow: inset 0 -3px 0 var(--xp-dark); transition: width .15s steps(3); }
+  #xpText { font-size: 12px; color: var(--xp); font-variant-numeric: tabular-nums; }
+  .hint { font-family: 'Do Hyeon', sans-serif; font-size: 16px; line-height: 1.3; display: flex; flex-wrap: wrap; gap: 2px 12px; }
+  .hint .ok { color: var(--xp); }
+  .hint .bad { color: var(--danger); }
+  .side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .clock { display: flex; align-items: center; gap: 8px; }
+  #timer { font-size: 22px; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+  #hearts { display: flex; gap: 4px; }
+  #hearts img { width: 21px; height: 18px; filter: drop-shadow(2px 2px 0 #000); }
+  .dash { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--foam-dim); }
+  .dash-track { width: 64px; height: 6px; background: #0d0d0d; border: 2px solid #000; }
+  #dashFill { height: 100%; width: 100%; background: var(--foam); }
+  .icon-btn {
+    pointer-events: auto; font: inherit; font-size: 12px; color: #fff; cursor: pointer;
+    background: var(--btn); border: 2px solid #000; padding: 4px 8px;
+    box-shadow: inset 2px 2px 0 #a8a8a8, inset -2px -2px 0 #3c3c3c;
+    text-shadow: 2px 2px 0 #333;
+  }
+  .icon-btn:hover { background: var(--btn-hover); }
+  .icon-btn:focus-visible, .mc-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  #ladder { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; flex-wrap: wrap; }
+  #ladder li {
+    display: flex; align-items: center; gap: 4px; padding: 3px 6px;
+    font-family: 'Do Hyeon', sans-serif; font-size: 14px;
+    background: rgba(0,0,0,.35); border: 2px solid rgba(0,0,0,.6); color: var(--foam-dim);
+  }
+  #ladder li img { height: 14px; width: auto; }
+  #ladder li.done { opacity: .5; }
+  #ladder li.now { color: #fff; border-color: var(--gold); background: rgba(40,30,0,.55); }
+  #mini { width: 156px; height: 66px; border: 2px solid #000; box-shadow: inset 0 0 0 1px rgba(214,246,255,.25); flex: none; }
+  #dashBtn {
+    display: none; pointer-events: auto; font-family: 'Do Hyeon', sans-serif; font-size: 18px;
+    width: 72px; height: 72px; border-radius: 0;
+  }
+  @media (pointer: coarse) {
+    #ladder { display: none; }
+    #dashBtn { display: block; }
+  }
+  @media (max-width: 640px) {
+    #ladder { display: none; }
+    .stage-name { font-size: 20px; }
+    .hint { font-size: 14px; }
+  }
+
+  #toast {
+    position: fixed; left: 50%; top: 26%; transform: translateX(-50%);
+    font-family: 'Do Hyeon', sans-serif; font-size: 30px; text-align: center;
+    width: calc(100% - 32px); pointer-events: none; opacity: 0;
+    text-shadow: 3px 3px 0 #000;
+  }
+  #toast.show { animation: toast 2.4s steps(12) forwards; }
+  #toast.bad { color: var(--danger); }
+  #toast.good { color: var(--gold); }
+  @keyframes toast { 0% { opacity: 0; } 8%, 75% { opacity: 1; } 100% { opacity: 0; } }
+
+  /* ---------- 마인크래프트식 GUI 패널 ---------- */
+  .overlay {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    padding-block: calc(env(safe-area-inset-top, 0px) + 16px) calc(env(safe-area-inset-bottom, 0px) + 16px);
+    padding-inline: 16px;
+    background: rgba(3, 10, 22, .55);
+    overflow-y: auto;
+  }
+  .panel {
+    width: min(600px, 100%);
+    background: var(--stone); color: var(--stone-text);
+    border: 3px solid #111;
+    box-shadow: inset 3px 3px 0 var(--stone-hi), inset -3px -3px 0 var(--stone-lo), 6px 6px 0 rgba(0,0,0,.45);
+    padding: 24px;
+    display: flex; flex-direction: column; gap: 16px;
+    font-family: 'Do Hyeon', sans-serif; font-size: 17px; line-height: 1.45;
+  }
+  .eyebrow { margin: 0; font-family: 'Silkscreen', sans-serif; font-size: 11px; letter-spacing: .12em; color: #5d5d5d; text-transform: uppercase; }
+  .panel h1, .panel h2 { margin: 0; color: var(--title); font-weight: 400; line-height: 1.1; text-wrap: balance; }
+  .panel h1 { font-size: clamp(34px, 8vw, 48px); }
+  .panel h2 { font-size: clamp(28px, 6vw, 38px); }
+  .panel p { margin: 0; max-width: 60ch; }
+  .chain { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 4px; align-items: flex-start; }
+  .chain li { display: flex; align-items: flex-start; gap: 4px; }
+  .chain li + li::before { content: "›"; font-family: 'Silkscreen', sans-serif; font-size: 18px; color: #6a6a6a; padding-top: 14px; }
+  .chain figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; }
+  .slot {
+    width: 52px; height: 44px; display: grid; place-items: center;
+    background: var(--slot);
+    box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #ffffff;
+  }
+  .slot img { max-width: 44px; max-height: 34px; }
+  .chain figcaption { font-size: 14px; text-align: center; line-height: 1.1; }
+  .chain .food figcaption { color: #6a6a6a; }
+  .chain .goal .slot { background: #8f7a4a; }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; align-items: center; }
+  .keys dt { display: flex; gap: 4px; flex-wrap: wrap; }
+  .keys dd { margin: 0; }
+  kbd {
+    font-family: 'Silkscreen', sans-serif; font-size: 11px; color: #fff; padding: 2px 6px;
+    background: #5a5a5a; border: 2px solid #111; box-shadow: inset -2px -2px 0 #333, inset 2px 2px 0 #888;
+    text-shadow: 1px 1px 0 #222;
+  }
+  .mc-btn {
+    font-family: 'Do Hyeon', sans-serif; font-size: 22px; color: #fff; cursor: pointer;
+    background: var(--btn); border: 3px solid #000; padding: 10px 16px; width: 100%;
+    box-shadow: inset 3px 3px 0 #a8a8a8, inset -3px -3px 0 #3c3c3c;
+    text-shadow: 2px 2px 0 #333;
+  }
+  .mc-btn:hover { background: var(--btn-hover); box-shadow: inset 3px 3px 0 #a9b6ea, inset -3px -3px 0 #3d4c86; }
+  .best { font-size: 15px; color: #555; }
+  .end-art { display: grid; place-items: center; padding: 12px; background: #0b2a4a; box-shadow: inset 3px 3px 0 #061428, inset -3px -3px 0 #2a6f99; }
+  .end-art img { width: min(320px, 100%); height: auto; }
+  .playtime { display: flex; flex-direction: column; gap: 2px; }
+  .playtime span { font-size: 15px; color: #5d5d5d; }
+  .playtime strong { font-weight: 400; font-size: clamp(40px, 10vw, 60px); line-height: 1; color: var(--title); font-variant-numeric: tabular-nums; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+  .stats div { background: var(--slot); box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #ffffff; padding: 8px 10px; }
+  .stats dt { font-size: 13px; color: #2c2c2c; }
+  .stats dd { margin: 0; font-family: 'Silkscreen', 'Do Hyeon', sans-serif; font-size: 18px; color: #fff; text-shadow: 2px 2px 0 #3f3f3f; font-variant-numeric: tabular-nums; }
+  @media (max-width: 420px) {
+    .panel { padding: 18px; }
+    .stats { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #toast.show { animation-duration: 3s; }
+    #xpfill { transition: none; }
+  }
+</style>
+
+<canvas id="game" aria-label="바다 생존 게임 화면"></canvas>
+
+<div class="hud" id="hud" hidden>
+  <div class="hud-top">
+    <div class="status">
+      <div class="stage">
+        <img id="stageIcon" class="px" alt="">
+        <span class="stage-name" id="stageName">물고기</span>
+        <span class="stage-no" id="stageNo">1 / 6</span>
+      </div>
+      <div class="xp-row">
+        <div class="xpbar" aria-label="성장 게이지"><div id="xpfill"></div></div>
+        <span id="xpText">0 / 12</span>
+      </div>
+      <div class="hint" id="hint"></div>
+    </div>
+    <div class="side">
+      <div class="clock">
+        <span id="timer">00:00</span>
+        <button class="icon-btn" id="pauseBtn" type="button" aria-label="일시정지">II</button>
+      </div>
+      <div id="hearts"></div>
+      <div class="dash"><span>DASH</span><div class="dash-track"><div id="dashFill"></div></div></div>
+    </div>
+  </div>
+  <div class="hud-bottom">
+    <button class="icon-btn" id="dashBtn" type="button">대시</button>
+    <ol id="ladder" aria-label="진화 단계"></ol>
+    <canvas id="mini" width="156" height="66" class="px" aria-label="미니맵"></canvas>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div class="overlay" id="startScreen">
+  <div class="panel">
+    <p class="eyebrow">Pixel Ocean Survival</p>
+    <h1>픽셀 바다 생존기</h1>
+    <p>물고기로 태어나 플랑크톤을 먹고 자랍니다. 성장 게이지가 가득 차면 다음 종으로 진화하고, 그때부터는 바로 아래 단계 생물을 사냥합니다. 메갈로돈이 되는 순간 게임이 끝나고 플레이 시간이 기록됩니다.</p>
+    <ol class="chain" id="chain"></ol>
+    <p>위 단계 생물(머리 위 <b style="color:#c62828">!</b> 표시)에게 세 번 물리면 이번 단계에서 모은 성장치를 잃고 다른 곳에서 다시 시작합니다.</p>
+    <dl class="keys">
+      <dt><kbd>MOUSE</kbd><kbd>TOUCH</kbd></dt><dd>가리키는 쪽으로 헤엄</dd>
+      <dt><kbd>WASD</kbd><kbd>←↑↓→</kbd></dt><dd>키보드 이동</dd>
+      <dt><kbd>SPACE</kbd></dt><dd>대시 (짧은 가속, 재사용 대기 2초)</dd>
+      <dt><kbd>P</kbd><kbd>ESC</kbd></dt><dd>일시정지</dd>
+    </dl>
+    <button class="mc-btn" id="startBtn" type="button">시작하기</button>
+    <p class="best" id="bestLine" hidden></p>
+  </div>
+</div>
+
+<div class="overlay" id="pauseScreen" hidden>
+  <div class="panel">
+    <p class="eyebrow">Paused</p>
+    <h2>일시정지</h2>
+    <p>시간이 멈춰 있습니다. 준비되면 계속하세요.</p>
+    <button class="mc-btn" id="resumeBtn" type="button">계속하기</button>
+  </div>
+</div>
+
+<div class="overlay" id="endScreen" hidden>
+  <div class="panel">
+    <p class="eyebrow">Final Evolution</p>
+    <h2>메갈로돈이 되었습니다</h2>
+    <div class="end-art"><img id="endArt" class="px" alt="메갈로돈"></div>
+    <div class="playtime"><span>플레이 시간</span><strong id="endTime">0초</strong></div>
+    <dl class="stats">
+      <div><dt>잡아먹은 수</dt><dd id="endEaten">0</dd></div>
+      <div><dt>잡아먹힌 횟수</dt><dd id="endDeaths">0</dd></div>
+      <div><dt>최고 기록</dt><dd id="endBest">-</dd></div>
+    </dl>
+    <button class="mc-btn" id="againBtn" type="button">다시 하기</button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const cv = $('game'), ctx = cv.getContext('2d');
+const mini = $('mini'), mctx = mini.getContext('2d');
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const WORLD = { w: 2600, h: 1100 };
+const FLOOR_CLEAR = 44;          // 바닥 블록 위로 생물이 머무는 여유
+const HP_MAX = 3;
+const DASH_CD = 2.2;
+
+/* ================= 픽셀 스프라이트 ================= */
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+const pad = rows => { const w = Math.max(...rows.map(r => r.length)); return rows.map(r => r.padEnd(w, '.')); };
+function paint(rows, pal) {
+  rows = pad(rows);
+  const c = mk(rows[0].length, rows.length), g = c.getContext('2d');
+  rows.forEach((r, y) => [...r].forEach((ch, x) => { if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); } }));
+  return c;
+}
+function flip(c) {
+  const f = mk(c.width, c.height), g = f.getContext('2d');
+  g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(c, 0, 0); return f;
+}
+// 꼬리(왼쪽 cols 열)를 한 줄 위로 올려 헤엄 프레임을 만든다
+function wag(rows, cols) {
+  rows = pad(rows);
+  return rows.map((r, y) => (rows[y + 1] || '.'.repeat(r.length)).slice(0, cols) + r.slice(cols));
+}
+
+const FISH = [[
+  '....ddddd...',
+  'f..doowoood.',
+  'ffdoooowoWKo',
+  'fffooowooooo',
+  'ffdoooowoood',
+  'f..dooowood.',
+  '....ddddd...',
+], [
+  '....ddddd...',
+  '...doowoood.',
+  'f.doooowoWKo',
+  'ffffoowooooo',
+  'f.doooowoood',
+  '...dooowood.',
+  '....ddddd...',
+]];
+const JELLY_TOP = [
+  '....pppp....',
+  '..ppPPpppp..',
+  '.pPPpppppppp',
+  '.pPppppppppp',
+  'pppppppppppp',
+  'ppKppppppKpp',
+  'pppppppppppp',
+  'dpdpdpdpdpdp',
+];
+const JELLY = [JELLY_TOP.concat([
+  '.t..t..t..t.',
+  '..t..t..t..t',
+  '.t..t..t..t.',
+  '..t..t..t..t',
+  '.t.....t....',
+]), JELLY_TOP.concat([
+  '..t..t..t..t',
+  '.t..t..t..t.',
+  '..t..t..t..t',
+  '.t..t..t..t.',
+  '....t.....t.',
+])];
+const OCTO_TOP = [
+  '.....rrrrrr.....',
+  '...rrrrrrrrrr...',
+  '..rRRrrrrrrrrr..',
+  '..rRrrrrrrrrrr..',
+  '..rrrrrrrrrrrr..',
+  '..rWKrrrrrrWKr..',
+  '..rrrrrrrrrrrr..',
+  '...rrrrddrrrr...',
+  '..rrrrrrrrrrrr..',
+];
+const OCTO = [OCTO_TOP.concat([
+  '.rr.rr.rr.rr.rr.',
+  '.r..r..r..r..r..',
+  'r..r..r..r..r...',
+  '.r..r..r..r..r..',
+  'r...r..r..r...r.',
+]), OCTO_TOP.concat([
+  '.rr.rr.rr.rr.rr.',
+  '..r..r..r..r..r.',
+  '...r..r..r..r..r',
+  '..r..r..r..r..r.',
+  '.r...r..r..r...r',
+])];
+const WHALE0 = [
+  '...............BBBBBBBBB......',
+  'B............BBbbbbbbbbbBB....',
+  'BB.........BBbbbbbbbbbbbbbBB..',
+  '.BB......BBbbbbbbbbbbbbbbbbbB.',
+  '..BBBBBBBbbbbbbbbbbbbbbbbbWKbB',
+  '...BbbbbbbbbbbbbbbbbbbbbbbbbbB',
+  '..BBbbbbbbbblglglglglglglglllB',
+  '.BB..BBbbbblllllllllllllllllB.',
+  'BB.....BBBBlllllllllllllllBB..',
+  'B...........BBB..BBBBBBBBB....',
+  '..............bb..............',
+  '...............b..............',
+];
+const SHARK0 = [
+  '..............G...............',
+  '.............GG...............',
+  '............GGG...............',
+  'G..........GGgG...............',
+  'GG......GGGggggGGGGGGG........',
+  '.GG..GGGgggggggggggggggGGG....',
+  '..GGGggggggggggggggggggggKgGG.',
+  '...Gggggggggggggggggggggggggggg',
+  '..GGGgglllllllllllllllllllWrWrW',
+  '.GG..GGlllllllllllllllllllrWrW.',
+  'GG......GGGllllllGGlllllllll...',
+  'G..............GG..............',
+];
+const MEGA0 = [
+  '....................GG..................',
+  '...................GGG..................',
+  '..................GGgG..................',
+  '.................GGggG..................',
+  'G...............GGgggGG.................',
+  'GG..........GGGGgggggggGGGGGGGG.........',
+  '.GG.....GGGGgggggggggggggggggggGGGG.....',
+  '..GG.GGGggggggsggggggggsgggggggggggGGG..',
+  '...GGgggggggggggsggggggggsggggggggKKgGG.',
+  '...GgggggggggggggggggggggggggggggggggggG',
+  '..GGgggllllllllllllllllllllllllllrWrWrWr',
+  '.GG.GGGlllllllllllllllllllllllllllWrWrWG',
+  'GG.....GGllllllllllllllllllllllllllllGG.',
+  'G.........GGGlllllllGGGlllllllllllGG....',
+  '...................GGG..................',
+  '....................G...................',
+];
+
+const SPECIES = [
+  { name: '플랑크톤', speed: 10, y: [0.03, 0.7], color: '#7affc8', face: false,
+    pal: { c: '#6cf2b8', C: '#effff8' }, frames: [['.c.', 'cCc', '.c.'], ['...', '.C.', '...']] },
+  { name: '물고기', speed: 58, need: 12, y: [0.05, 0.8], color: '#ff8a1f', face: true,
+    pal: { o: '#ff8a1f', d: '#c4561a', w: '#fff1dc', f: '#ffb257', W: '#ffffff', K: '#161616' }, frames: FISH },
+  { name: '해파리', speed: 50, need: 9, y: [0.08, 0.85], color: '#ff7fd0', face: false,
+    pal: { p: '#ff7fd0', P: '#ffd0ef', d: '#c9459e', t: '#ffb0e0', K: '#5a1a48' }, frames: JELLY },
+  { name: '문어', speed: 56, need: 8, y: [0.35, 0.95], color: '#e0463c', face: false,
+    pal: { r: '#e0463c', R: '#ff8f76', d: '#8f2424', W: '#ffffff', K: '#111111' }, frames: OCTO },
+  { name: '고래', speed: 62, need: 7, y: [0.08, 0.7], color: '#3a6fb0', face: true,
+    pal: { b: '#3a6fb0', B: '#24497d', l: '#d4e6f4', g: '#8fb0cf', W: '#ffffff', K: '#111111' }, frames: [WHALE0, wag(WHALE0, 7)] },
+  { name: '상어', speed: 72, need: 6, y: [0.08, 0.9], color: '#8795a3', face: true,
+    pal: { g: '#8795a3', G: '#56626e', l: '#e8edf0', W: '#ffffff', r: '#a3232b', K: '#111111' }, frames: [SHARK0, wag(SHARK0, 6)] },
+  { name: '메갈로돈', speed: 78, y: [0.3, 0.95], color: '#48535f', face: true,
+    pal: { g: '#48535f', G: '#252c35', l: '#b7c0c8', s: '#727e8a', W: '#ffffff', r: '#6e1016', K: '#ff3b30' }, frames: [MEGA0, wag(MEGA0, 7)] },
+];
+for (const sp of SPECIES) {
+  sp.img = sp.frames.map(f => paint(f, sp.pal));
+  sp.imgL = sp.face ? sp.img.map(flip) : sp.img;
+  sp.w = sp.img[0].width; sp.h = sp.img[0].height;
+  sp.r = (sp.w * 0.35 + sp.h * 0.5) / 2;
+}
+SPECIES[0].r = 2.5;
+
+function iconURL(img, scale) {
+  const c = mk(img.width * scale, img.height * scale), g = c.getContext('2d');
+  g.imageSmoothingEnabled = false; g.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL();
+}
+const ICONS = SPECIES.map(sp => iconURL(sp.img[0], 3));
+const HEART_ROWS = ['.rr.rr.', 'rRrrrrr', 'rrrrrrr', '.rrrrr.', '..rrr..', '...r...'];
+const HEART_FULL = iconURL(paint(HEART_ROWS, { r: '#e8262b', R: '#ffb3b3' }), 3);
+const HEART_EMPTY = iconURL(paint(HEART_ROWS, { r: '#2b1519', R: '#2b1519' }), 3);
+const MARKER = paint(['ooooo', '.ooo.', '..o..'], { o: '#ffd23f' });
+
+const josaRo = w => { const c = (w.charCodeAt(w.length - 1) - 0xAC00) % 28; return (c === 0 || c === 8) ? '로' : '으로'; };
+const rand = (a, b) => a + Math.random() * (b - a);
+function hash(n) {
+  n |= 0; n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); n = Math.imul(n ^ (n >>> 16), 0x45d9f3b); n ^= n >>> 16;
+  return (n >>> 0) / 4294967295;
+}
+const mod = (a, m) => ((a % m) + m) % m;
+
+/* 수심별 물 색 (블록형 그라데이션) */
+const WATER = (() => {
+  const stops = [[0, [42, 163, 201]], [0.35, [18, 100, 143]], [0.7, [10, 53, 97]], [1, [5, 26, 54]]];
+  const out = [];
+  for (let i = 0; i < 28; i++) {
+    const t = i / 27; let a = stops[0], b = stops[stops.length - 1];
+    for (let k = 0; k < stops.length - 1; k++) if (t >= stops[k][0] && t <= stops[k + 1][0]) { a = stops[k]; b = stops[k + 1]; }
+    const u = (t - a[0]) / ((b[0] - a[0]) || 1);
+    out.push(`rgb(${a[1].map((v, j) => Math.round(v + (b[1][j] - v) * u)).join(',')})`);
+  }
+  return out;
+})();
+
+/* ================= 게임 상태 ================= */
+let state = 'title', paused = false;
+let p, ents = [], parts = [], elapsed = 0, eaten = 0, deaths = 0, clock = 0;
+const cam = { x: 0, y: 0 };
+let viewBase = 180, shake = 0, flash = 0, flashColor = '255,255,255';
+let spawnTimer = 0, bubbleTimer = 0, nextId = 1, miniTick = 0;
+const keys = new Set();
+const pointer = { x: 0, y: 0, active: false, touch: false };
+
+const targetBase = t => 180 + (t - 1) * 28;
+const viewRadius = () => Math.hypot(cv.width, cv.height) / 2;
+
+function populationTargets(pt) {
+  const t = [pt === 1 ? 170 : 70, 0, 0, 0, 0, 0, 0];
+  for (let k = 1; k <= 6; k++) {
+    const d = k - pt;
+    t[k] = d === -1 ? 14 : d < -1 ? 3 : d === 0 ? 4 : d === 1 ? 5 : d === 2 ? 2 : 1;
+  }
+  return t;
+}
+
+function spawn(tier, initial) {
+  const sp = SPECIES[tier];
+  let x, y;
+  for (let tries = 0; tries < 30; tries++) {
+    if (!initial && tier === p.tier - 1 && Math.random() < 0.6) {
+      // 먹이는 화면 바로 바깥 고리에 보충해 찾아다니는 시간을 줄인다
+      const a = Math.random() * Math.PI * 2, r = viewRadius() + rand(50, 260);
+      x = Math.max(40, Math.min(WORLD.w - 40, p.x + Math.cos(a) * r));
+      y = Math.max(12, Math.min(WORLD.h - FLOOR_CLEAR, p.y + Math.sin(a) * r));
+    } else {
+      x = rand(40, WORLD.w - 40);
+      y = Math.min(rand(sp.y[0], sp.y[1]) * WORLD.h, WORLD.h - FLOOR_CLEAR);
+    }
+    const d = Math.hypot(x - p.x, y - p.y);
+    const minD = initial ? (tier > p.tier ? 380 : 50) : viewRadius() + 40;
+    if (d > minD) break;
+  }
+  ents.push({ id: nextId++, tier, x, y, vx: 0, vy: 0, face: Math.random() < 0.5 ? -1 : 1,
+    t: Math.random() * 10, wa: Math.random() * Math.PI * 2, chase: 0, cool: 0, alert: false, dead: false });
+}
+
+function reset() {
+  p = { tier: 1, x: WORLD.w / 2, y: 200, vx: 0, vy: 0, face: 1, hp: HP_MAX, inv: 2, xp: 0, dash: 0, dashCd: 0, t: 0 };
+  ents = []; parts = []; elapsed = 0; eaten = 0; deaths = 0; shake = 0; flash = 0;
+  viewBase = targetBase(1); resizeView();
+  const tg = populationTargets(p.tier);
+  tg.forEach((n, k) => { for (let i = 0; i < n; i++) spawn(k, true); });
+  placeCamera();
+  refreshHud(true);
+}
+
+/* ================= 입력 ================= */
+const KEYMAP = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd' };
+addEventListener('keydown', e => {
+  if (KEYMAP[e.code]) { keys.add(KEYMAP[e.code]); pointer.active = false; e.preventDefault(); }
+  else if (e.code === 'Space') { e.preventDefault(); dash(); }
+  else if (e.code === 'KeyP' || e.code === 'Escape') togglePause();
+  else if (e.code === 'Enter' && (state === 'title' || state === 'end')) startGame();
+});
+addEventListener('keyup', e => { if (KEYMAP[e.code]) keys.delete(KEYMAP[e.code]); });
+addEventListener('blur', () => keys.clear());
+cv.addEventListener('pointermove', e => {
+  pointer.x = e.clientX; pointer.y = e.clientY;
+  pointer.touch = e.pointerType !== 'mouse';
+  if (!pointer.touch || e.buttons) pointer.active = true;
+});
+cv.addEventListener('pointerdown', e => {
+  pointer.x = e.clientX; pointer.y = e.clientY; pointer.touch = e.pointerType !== 'mouse'; pointer.active = true;
+  if (pointer.touch) cv.setPointerCapture(e.pointerId);
+});
+const releaseTouch = e => { if (e.pointerType !== 'mouse') pointer.active = false; };
+cv.addEventListener('pointerup', releaseTouch);
+cv.addEventListener('pointercancel', releaseTouch);
+cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') pointer.active = false; });
+document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'play' && !paused) togglePause(); });
+
+$('startBtn').addEventListener('click', startGame);
+$('againBtn').addEventListener('click', startGame);
+$('resumeBtn').addEventListener('click', togglePause);
+$('pauseBtn').addEventListener('click', togglePause);
+$('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); dash(); });
+
+function startGame() {
+  reset();
+  state = 'play'; paused = false;
+  $('startScreen').hidden = true; $('endScreen').hidden = true; $('pauseScreen').hidden = true;
+  $('hud').hidden = false;
+  toast('플랑크톤을 먹고 성장하세요', 'good');
+}
+function togglePause() {
+  if (state !== 'play') return;
+  paused = !paused;
+  $('pauseScreen').hidden = !paused;
+  if (paused) $('resumeBtn').focus(); else { keys.clear(); cv.focus?.(); }
+}
+function dash() {
+  if (state !== 'play' || paused || p.dashCd > 0) return;
+  p.dash = 0.35; p.dashCd = DASH_CD;
+  for (let i = 0; i < 6; i++) bubble(p.x - p.face * SPECIES[p.tier].w / 2, p.y + rand(-3, 3), -p.face * rand(20, 50));
+}
+
+/* ================= 효과 ================= */
+function bubble(x, y, vx = 0) {
+  parts.push({ x, y, vx: vx + rand(-4, 4), vy: rand(-24, -12), life: rand(0.8, 1.6), size: Math.random() < 0.3 ? 2 : 1, color: 'rgba(214,246,255,.8)' });
+}
+function burst(x, y, color, n) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = rand(15, 70);
+    parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(0.3, 0.8), size: Math.random() < 0.4 ? 2 : 1, color });
+  }
+}
+let toastTimer;
+function toast(msg, kind) {
+  const el = $('toast');
+  el.textContent = msg; el.className = '';
+  void el.offsetWidth;
+  el.className = 'show ' + (kind || '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.className = ''; }, 2500);
+}
+
+/* ================= 진행 ================= */
+function evolve() {
+  p.tier++; p.xp = 0; p.hp = HP_MAX;
+  const sp = SPECIES[p.tier];
+  burst(p.x, p.y, sp.color, 40);
+  for (let i = 0; i < 16; i++) bubble(p.x + rand(-12, 12), p.y + rand(-8, 8));
+  flash = 0.7; flashColor = '255,255,255';
+  if (p.tier === 6) { finish(); return; }
+  p.inv = 1.2;
+  toast(`${sp.name}${josaRo(sp.name)} 진화!`, 'good');
+  refreshHud(true);
+}
+function die() {
+  deaths++;
+  p.hp = HP_MAX; p.xp = 0; p.inv = 3; p.vx = p.vy = 0;
+  let best = null, bestScore = -1;
+  for (let i = 0; i < 14; i++) {
+    const x = rand(80, WORLD.w - 80), y = rand(0.1, 0.75) * WORLD.h;
+    let md = 1e9;
+    for (const e of ents) if (e.tier > p.tier) md = Math.min(md, Math.hypot(e.x - x, e.y - y));
+    if (md > bestScore) { bestScore = md; best = { x, y }; }
+  }
+  p.x = best.x; p.y = best.y;
+  for (const e of ents) { e.chase = 0; e.cool = 2; }
+  placeCamera();
+  flash = 0.6; flashColor = '255,60,60';
+  toast('잡아먹혔다! 이번 단계 성장치가 초기화됐다', 'bad');
+  refreshHud(true);
+}
+function finish() {
+  state = 'end';
+  const t = elapsed;
+  let best = null;
+  try { best = parseFloat(localStorage.getItem('pixelOcean.best')); } catch (e) {}
+  if (!(best > 0) || t < best) { best = t; try { localStorage.setItem('pixelOcean.best', String(t)); } catch (e) {} }
+  $('endTime').textContent = fmtKo(t);
+  $('endEaten').textContent = eaten;
+  $('endDeaths').textContent = deaths;
+  $('endBest').textContent = fmtKo(best);
+  $('hud').hidden = true;
+  $('endScreen').hidden = false;
+  $('againBtn').focus();
+}
+const fmtKo = s => {
+  s = Math.floor(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  return h ? `${h}시간 ${m}분 ${x}초` : m ? `${m}분 ${x}초` : `${x}초`;
+};
+const fmtClock = s => {
+  s = Math.floor(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  const pad2 = n => String(n).padStart(2, '0');
+  return h ? `${h}:${pad2(m)}:${pad2(x)}` : `${pad2(m)}:${pad2(x)}`;
+};
+
+/* ================= 업데이트 ================= */
+function updatePlayer(dt) {
+  let ix = 0, iy = 0;
+  if (keys.size) {
+    if (keys.has('l')) ix -= 1; if (keys.has('r')) ix += 1;
+    if (keys.has('u')) iy -= 1; if (keys.has('d')) iy += 1;
+    const l = Math.hypot(ix, iy); if (l) { ix /= l; iy /= l; }
+  } else if (pointer.active) {
+    const wx = cam.x + pointer.x / innerWidth * cv.width, wy = cam.y + pointer.y / innerHeight * cv.height;
+    const dx = wx - p.x, dy = wy - p.y, d = Math.hypot(dx, dy);
+    if (d > 3) { const f = Math.min(1, d / 40); ix = dx / d * f; iy = dy / d * f; }
+  }
+  const sp = SPECIES[p.tier];
+  const spd = sp.speed * (p.dash > 0 ? 2.3 : 1);
+  const k = Math.min(1, dt * (p.dash > 0 ? 10 : 5));
+  p.vx += (ix * spd - p.vx) * k; p.vy += (iy * spd - p.vy) * k;
+  p.x = Math.max(sp.w / 2, Math.min(WORLD.w - sp.w / 2, p.x + p.vx * dt));
+  p.y = Math.max(4, Math.min(WORLD.h - FLOOR_CLEAR, p.y + p.vy * dt));
+  if (Math.abs(p.vx) > 3) p.face = p.vx > 0 ? 1 : -1;
+  p.t += dt * (0.6 + Math.hypot(p.vx, p.vy) / sp.speed);
+  p.inv = Math.max(0, p.inv - dt); p.dash = Math.max(0, p.dash - dt); p.dashCd = Math.max(0, p.dashCd - dt);
+  bubbleTimer -= dt;
+  if (bubbleTimer <= 0) { bubbleTimer = rand(0.25, 0.6); bubble(p.x + p.face * sp.w * 0.3, p.y - sp.h * 0.3); }
+}
+
+function updateEntity(e, dt, playing) {
+  const sp = SPECIES[e.tier];
+  e.t += dt; e.cool = Math.max(0, e.cool - dt); e.alert = false;
+  const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+  const ps = SPECIES[p.tier].speed;
+  let dvx, dvy;
+  if (e.tier === 0) {
+    dvx = Math.cos(e.t * 0.7 + e.id) * sp.speed; dvy = Math.sin(e.t * 0.9 + e.id * 1.3) * sp.speed * 0.6;
+  } else if (playing && e.tier > p.tier && e.cool <= 0 && d < 110 + sp.w * 2) {
+    e.chase += dt;
+    if (e.chase > 6) { e.chase = 0; e.cool = 3; }
+    const v = Math.min(sp.speed * 1.1, ps * 0.82);
+    dvx = dx / d * v; dvy = dy / d * v; e.alert = true;
+  } else if (playing && e.tier < p.tier && d < 95 + SPECIES[p.tier].w) {
+    const v = ps * 0.68; dvx = -dx / d * v; dvy = -dy / d * v;
+  } else {
+    e.chase = Math.max(0, e.chase - dt);
+    e.wa += (Math.random() - 0.5) * dt * 2.4;
+    const v = sp.speed * 0.35; dvx = Math.cos(e.wa) * v; dvy = Math.sin(e.wa) * v * 0.45;
+    const y0 = sp.y[0] * WORLD.h, y1 = Math.min(sp.y[1] * WORLD.h, WORLD.h - FLOOR_CLEAR);
+    if (e.y < y0) dvy += 12; else if (e.y > y1) dvy -= 12;
+  }
+  if (e.tier === 2) { const pulse = 0.35 + 1.1 * Math.max(0, Math.sin(e.t * 3.2)); dvx *= pulse; dvy *= pulse; }
+  const k = Math.min(1, dt * 3);
+  e.vx += (dvx - e.vx) * k; e.vy += (dvy - e.vy) * k;
+  e.x += e.vx * dt; e.y += e.vy * dt;
+  if (e.x < 20) { e.x = 20; e.wa = Math.PI - e.wa; }
+  if (e.x > WORLD.w - 20) { e.x = WORLD.w - 20; e.wa = Math.PI - e.wa; }
+  e.y = Math.max(6, Math.min(WORLD.h - FLOOR_CLEAR, e.y));
+  if (Math.abs(e.vx) > 2) e.face = e.vx > 0 ? 1 : -1;
+}
+
+function update(dt) {
+  clock += dt;
+  const playing = state === 'play';
+  if (playing) updatePlayer(dt);
+  for (const e of ents) updateEntity(e, dt, playing);
+
+  // 생태계: 바로 아래 단계를 잡아먹는다
+  for (let i = 0; i < ents.length; i++) {
+    const a = ents[i]; if (a.dead) continue;
+    for (let j = i + 1; j < ents.length; j++) {
+      const b = ents[j]; if (b.dead || Math.abs(a.tier - b.tier) !== 1) continue;
+      const pr = a.tier > b.tier ? a : b, py = pr === a ? b : a;
+      if (Math.hypot(a.x - b.x, a.y - b.y) < SPECIES[pr.tier].r * 0.8 + SPECIES[py.tier].r * 0.6) py.dead = true;
+      if (a.dead) break;
+    }
+  }
+
+  if (playing) {
+    const ps = SPECIES[p.tier];
+    for (const e of ents) {
+      if (e.dead) continue;
+      const es = SPECIES[e.tier];
+      const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1;
+      if (e.tier < p.tier && d < ps.r + es.r * 0.9) {
+        e.dead = true; eaten++;
+        p.xp += e.tier === p.tier - 1 ? 1 : 0.25;
+        burst(e.x, e.y, es.color, 8 + e.tier * 3);
+        if (p.xp >= ps.need) { evolve(); if (state !== 'play') break; }
+        refreshHud();
+      } else if (e.tier > p.tier && p.inv <= 0 && d < ps.r * 0.8 + es.r * 0.8) {
+        p.hp--; p.inv = 1.4; shake = 0.35;
+        p.vx = -dx / d * 170; p.vy = -dy / d * 170;
+        e.cool = 1.5; e.chase = 0;
+        burst(p.x, p.y, '#ff5a5a', 10);
+        flash = 0.25; flashColor = '255,60,60';
+        if (p.hp <= 0) die(); else refreshHud(true);
+      } else if (e.tier === p.tier && d < ps.r + es.r) {
+        e.x += dx / d * 30 * dt; e.y += dy / d * 30 * dt;
+      }
+    }
+  }
+  ents = ents.filter(e => !e.dead);
+
+  // 개체 수 유지: 화면 밖에서 보충/정리
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnTimer = 0.5;
+    const tg = populationTargets(p.tier), cnt = [0, 0, 0, 0, 0, 0, 0];
+    for (const e of ents) cnt[e.tier]++;
+    const vr = viewRadius() + 30;
+    for (let k = 0; k <= 6; k++) {
+      for (let i = 0; i < Math.min(k === 0 ? 8 : 3, tg[k] - cnt[k]); i++) spawn(k, false);
+      if (cnt[k] > tg[k] + 2) {
+        const idx = ents.findIndex(e => e.tier === k && Math.hypot(e.x - p.x, e.y - p.y) > vr);
+        if (idx >= 0) ents.splice(idx, 1);
+      }
+    }
+  }
+
+  for (const q of parts) { q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 1 - dt * 2; }
+  parts = parts.filter(q => q.life > 0 && q.y > 0);
+  if (Math.random() < dt * 3) bubble(cam.x + rand(0, cv.width), WORLD.h - FLOOR_CLEAR + 10);
+
+  shake = Math.max(0, shake - dt); flash = Math.max(0, flash - dt * 1.6);
+}
+
+/* ================= 카메라 / 뷰 ================= */
+function resizeView() {
+  const a = innerWidth / innerHeight;
+  let w, h;
+  if (a >= 1) { h = viewBase; w = viewBase * a; } else { w = viewBase; h = viewBase / a; }
+  w = Math.round(w); h = Math.round(h);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+}
+function placeCamera() {
+  const vw = cv.width, vh = cv.height;
+  if (state === 'play' || state === 'end') {
+    cam.x = p.x - vw / 2; cam.y = p.y - vh / 2;
+  } else {
+    cam.x = WORLD.w / 2 - vw / 2 + Math.sin(clock * 0.08) * 500; cam.y = 60 + Math.sin(clock * 0.05) * 60;
+  }
+  cam.x = Math.max(0, Math.min(WORLD.w - vw, cam.x));
+  cam.y = Math.max(-36, Math.min(WORLD.h + 24 - vh, cam.y));
+}
+
+/* ================= 그리기 ================= */
+const floorTop = bx => WORLD.h - (1 + Math.floor(hash(Math.floor(bx / 3) + 77) * 3)) * 8;
+
+function draw() {
+  ctx.imageSmoothingEnabled = false;
+  const vw = cv.width, vh = cv.height;
+  let cx = Math.round(cam.x), cy = Math.round(cam.y);
+  if (shake > 0 && !REDUCED) { cx += Math.round(rand(-2, 2)); cy += Math.round(rand(-2, 2)); }
+
+  // 물 (월드 좌표 4px 단위 블록 그라데이션) + 하늘
+  for (let sy = -mod(cy, 4); sy < vh; sy += 4) {
+    const wy = cy + sy;
+    ctx.fillStyle = wy < 0 ? '#8fd8ff' : WATER[Math.min(WATER.length - 1, Math.floor(wy / WORLD.h * WATER.length))];
+    ctx.fillRect(0, sy, vw, 4);
+  }
+  // 햇빛 기둥
+  for (let i = 0; i < 7; i++) {
+    const base = hash(i * 31 + 7) * WORLD.w * 1.2 - cx * 0.8;
+    for (let wy = Math.max(0, cy - mod(cy, 4)); wy < 300 && wy - cy < vh; wy += 4) {
+      const x = Math.round(base + wy * 0.35 + Math.sin(clock * 0.4 + i) * 6);
+      if (x > vw || x + 18 < 0) continue;
+      ctx.fillStyle = `rgba(210,250,255,${0.08 * (1 - wy / 300)})`;
+      ctx.fillRect(x, wy - cy, 14 + (i % 3) * 4, 4);
+    }
+  }
+  // 수면 물결
+  if (cy < 4) {
+    for (let x = -mod(cx, 2); x < vw; x += 2) {
+      const wave = Math.round(Math.sin((x + cx) * 0.07 + clock * 2) * 1.5);
+      ctx.fillStyle = '#d6f6ff'; ctx.fillRect(x, wave - cy - 1, 2, 2);
+      ctx.fillStyle = 'rgba(214,246,255,.35)'; ctx.fillRect(x, wave - cy + 1, 2, 2);
+    }
+  }
+  // 떠다니는 부유물
+  ctx.fillStyle = 'rgba(214,246,255,.3)';
+  for (let i = 0; i < 70; i++) {
+    const x = mod(hash(i) * 1200 - cx * 0.7 + clock * 3 * hash(i + 5), vw);
+    const y = mod(hash(i + 50) * 900 - cy * 0.7 - clock * 4, vh);
+    ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+  }
+
+  // 해초·산호 (블록 뒤)
+  const bx0 = Math.floor(cx / 8) - 1, bx1 = Math.ceil((cx + vw) / 8) + 1;
+  for (let bx = bx0; bx <= bx1; bx++) {
+    const top = floorTop(bx), sx = bx * 8 - cx, r = hash(bx * 97 + 5);
+    if (top - cy - 80 > vh) continue;
+    if (r < 0.11) {
+      const segs = 6 + Math.floor(hash(bx * 13) * 12);
+      for (let s = 0; s < segs; s++) {
+        const sway = Math.round(Math.sin(clock * 1.4 + bx * 0.7 + s * 0.35) * s * 0.22);
+        const y = top - (s + 1) * 5 - cy;
+        ctx.fillStyle = s % 2 ? '#2f8f3f' : '#3fae4c'; ctx.fillRect(sx + 2 + sway, y, 3, 5);
+        if (s % 3 === 1) { ctx.fillStyle = '#56c95f'; ctx.fillRect(sx + (s % 2 ? 5 : 0) + sway, y + 1, 2, 2); }
+      }
+    } else if (r < 0.17) {
+      const c1 = r < 0.14 ? '#ff6f91' : '#ffa94d', c2 = r < 0.14 ? '#c9446a' : '#d97a1f';
+      const h = 2 + Math.floor(hash(bx * 5) * 3);
+      for (let s = 0; s < h; s++) {
+        ctx.fillStyle = s % 2 ? c2 : c1; ctx.fillRect(sx + 2, top - (s + 1) * 4 - cy, 4, 4);
+        if (s === h - 1) { ctx.fillRect(sx, top - (s + 1) * 4 - cy, 2, 2); ctx.fillRect(sx + 6, top - (s + 1) * 4 - cy - 2, 2, 2); }
+      }
+    }
+  }
+  // 바닥 블록 (모래 → 모래 → 돌)
+  for (let bx = bx0; bx <= bx1; bx++) {
+    const top = floorTop(bx), sx = bx * 8 - cx;
+    for (let wy = top, row = 0; wy - cy < vh; wy += 8, row++) {
+      const sy = wy - cy; if (sy + 8 < 0) continue;
+      const n = hash(bx * 131 + row * 17);
+      ctx.fillStyle = row === 0 ? (n < 0.5 ? '#e8cb84' : '#dcbd76') : row < 3 ? (n < 0.5 ? '#c9a35c' : '#bd9853') : (n < 0.5 ? '#6d7580' : '#5f6770');
+      ctx.fillRect(sx, sy, 8, 8);
+      ctx.fillStyle = row < 3 ? 'rgba(120,85,40,.5)' : 'rgba(30,35,42,.55)';
+      ctx.fillRect(sx + Math.floor(n * 6), sy + Math.floor(hash(bx + row * 3) * 6), 1, 1);
+      ctx.fillRect(sx + Math.floor(hash(bx * 7 + row) * 6), sy + Math.floor(n * 7), 2, 1);
+      if (row === 0) { ctx.fillStyle = 'rgba(255,245,210,.35)'; ctx.fillRect(sx, sy, 8, 1); }
+    }
+  }
+
+  // 생물 (작은 것부터)
+  const blink = Math.floor(clock * 6) % 2 === 0;
+  const order = ents.slice().sort((a, b) => a.tier - b.tier);
+  for (const e of order) {
+    const sp = SPECIES[e.tier];
+    const sx = Math.round(e.x - sp.w / 2 - cx), sy = Math.round(e.y - sp.h / 2 - cy);
+    const onScreen = sx + sp.w > 0 && sx < vw && sy + sp.h > 0 && sy < vh;
+    if (onScreen) {
+      const fr = Math.floor(e.t * (e.tier === 0 ? 2 : 5)) % 2;
+      ctx.drawImage(e.face < 0 ? sp.imgL[fr] : sp.img[fr], sx, sy);
+      if (e.alert && blink) {
+        ctx.fillStyle = '#ff3b30';
+        ctx.fillRect(Math.round(e.x - cx) - 1, sy - 9, 2, 5); ctx.fillRect(Math.round(e.x - cx) - 1, sy - 3, 2, 2);
+      }
+    } else if (e.alert && blink && state === 'play') {
+      // 화면 밖에서 추격 중인 포식자 경고
+      const ex = Math.max(3, Math.min(vw - 7, e.x - cx)), ey = Math.max(3, Math.min(vh - 7, e.y - cy));
+      ctx.fillStyle = '#000'; ctx.fillRect(Math.round(ex) - 1, Math.round(ey) - 1, 6, 6);
+      ctx.fillStyle = '#ff3b30'; ctx.fillRect(Math.round(ex), Math.round(ey), 4, 4);
+    }
+  }
+
+  // 플레이어
+  if (state === 'play' || state === 'end') {
+    const sp = SPECIES[p.tier];
+    const visible = p.inv <= 0 || Math.floor(clock * 12) % 2 === 0 || state === 'end';
+    const sx = Math.round(p.x - sp.w / 2 - cx), sy = Math.round(p.y - sp.h / 2 - cy);
+    if (visible) {
+      const fr = Math.floor(p.t * 5) % 2;
+      ctx.drawImage(p.face < 0 ? sp.imgL[fr] : sp.img[fr], sx, sy);
+    }
+    ctx.drawImage(MARKER, Math.round(p.x - cx) - 2, sy - 6 + (Math.floor(clock * 3) % 2));
+  }
+
+  for (const q of parts) {
+    ctx.globalAlpha = Math.min(1, q.life * 2);
+    ctx.fillStyle = q.color; ctx.fillRect(Math.round(q.x - cx), Math.round(q.y - cy), q.size, q.size);
+  }
+  ctx.globalAlpha = 1;
+  if (flash > 0) { ctx.fillStyle = `rgba(${flashColor},${Math.min(0.6, flash)})`; ctx.fillRect(0, 0, vw, vh); }
+}
+
+function drawMini() {
+  const s = mini.width / WORLD.w;
+  mctx.fillStyle = 'rgba(5,22,44,.88)'; mctx.fillRect(0, 0, mini.width, mini.height);
+  mctx.fillStyle = 'rgba(220,190,120,.5)'; mctx.fillRect(0, mini.height - 2, mini.width, 2);
+  mctx.strokeStyle = 'rgba(214,246,255,.35)'; mctx.lineWidth = 1;
+  mctx.strokeRect(Math.round(cam.x * s) + 0.5, Math.round(Math.max(0, cam.y) * s) + 0.5, Math.round(cv.width * s), Math.round(cv.height * s));
+  for (const e of ents) {
+    if (e.tier === 0) {
+      if (p.tier === 1) { mctx.fillStyle = 'rgba(124,255,31,.55)'; mctx.fillRect(Math.round(e.x * s), Math.round(e.y * s), 1, 1); }
+      continue;
+    }
+    mctx.fillStyle = e.tier < p.tier ? '#7cff1f' : e.tier > p.tier ? '#ff5a5a' : '#9fb4c7';
+    const z = e.tier >= 4 ? 3 : 2;
+    mctx.fillRect(Math.round(e.x * s) - 1, Math.round(e.y * s) - 1, z, z);
+  }
+  mctx.fillStyle = '#ffd23f'; mctx.fillRect(Math.round(p.x * s) - 2, Math.round(p.y * s) - 2, 4, 4);
+}
+
+/* ================= HUD ================= */
+const ladder = $('ladder');
+for (let k = 1; k <= 6; k++) {
+  const li = document.createElement('li');
+  li.innerHTML = `<img class="px" alt="" src="${ICONS[k]}"><span>${SPECIES[k].name}</span>`;
+  ladder.appendChild(li);
+}
+const chain = $('chain');
+SPECIES.forEach((sp, k) => {
+  const li = document.createElement('li');
+  li.className = k === 0 ? 'food' : k === 6 ? 'goal' : '';
+  li.innerHTML = `<figure><div class="slot"><img class="px" alt="" src="${ICONS[k]}"></div><figcaption>${sp.name}${k === 0 ? '<br>(먹이)' : k === 6 ? '<br>(목표)' : ''}</figcaption></figure>`;
+  chain.appendChild(li);
+});
+$('endArt').src = iconURL(SPECIES[6].img[0], 8);
+const heartsEl = $('hearts');
+for (let i = 0; i < HP_MAX; i++) { const im = document.createElement('img'); im.className = 'px'; im.alt = ''; heartsEl.appendChild(im); }
+try {
+  const b = parseFloat(localStorage.getItem('pixelOcean.best'));
+  if (b > 0) { $('bestLine').textContent = `최고 기록: ${fmtKo(b)}`; $('bestLine').hidden = false; }
+} catch (e) {}
+
+let hudKey = '', lastSec = -1;
+function refreshHud(force) {
+  const key = `${p.tier}|${p.xp}|${p.hp}`;
+  if (!force && key === hudKey) return;
+  hudKey = key;
+  const sp = SPECIES[p.tier], next = SPECIES[p.tier + 1];
+  $('stageIcon').src = ICONS[p.tier];
+  $('stageName').textContent = sp.name;
+  $('stageNo').textContent = `${p.tier} / 6`;
+  $('xpfill').style.width = sp.need ? Math.min(100, p.xp / sp.need * 100) + '%' : '100%';
+  $('xpText').textContent = sp.need ? `${Math.floor(p.xp)} / ${sp.need}` : 'MAX';
+  const prey = SPECIES[p.tier - 1].name, pred = next ? next.name + (p.tier + 1 < 6 ? ' 이상' : '') : '없음';
+  $('hint').innerHTML = `<span class="ok">먹이: ${prey}</span><span class="bad">위험: ${pred}</span>`;
+  heartsEl.querySelectorAll('img').forEach((im, i) => { im.src = i < p.hp ? HEART_FULL : HEART_EMPTY; });
+  ladder.querySelectorAll('li').forEach((li, i) => { li.className = i + 1 < p.tier ? 'done' : i + 1 === p.tier ? 'now' : ''; });
+}
+function tickHud() {
+  const s = Math.floor(elapsed);
+  if (s !== lastSec) { lastSec = s; $('timer').textContent = fmtClock(elapsed); }
+  $('dashFill').style.width = (p.dashCd > 0 ? (1 - p.dashCd / DASH_CD) * 100 : 100) + '%';
+  $('dashBtn').style.opacity = p.dashCd > 0 ? 0.5 : 1;
+}
+
+/* ================= 루프 ================= */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!(state === 'play' && paused)) {
+    if (state === 'play') elapsed += dt;
+    viewBase += (targetBase(p.tier) - viewBase) * Math.min(1, dt * 2);
+    resizeView();
+    update(dt);
+    placeCamera();
+  }
+  draw();
+  if (state === 'play') {
+    tickHud();
+    if (++miniTick % 3 === 0) drawMini();
+  }
+  requestAnimationFrame(frame);
+}
+addEventListener('resize', resizeView);
+reset();
+requestAnimationFrame(frame);
+})();
+</script>
