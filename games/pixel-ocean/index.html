@@ -93,6 +93,7 @@
   .icon-btn:hover { background: var(--btn-hover); }
   .icon-btn:focus-visible, .mc-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
+  #zhp { color: #9dff4a; font-family: var(--px); font-size: 14px; }
   #boost { color: var(--gold); font-family: var(--px); font-size: 16px; }
   #ladder { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; flex-wrap: wrap; }
   #ladder li {
@@ -243,12 +244,13 @@
       <div id="hearts"></div>
       <div id="boost" hidden></div>
       <div class="dash"><span>DASH</span><div class="dash-track"><div id="dashFill"></div></div></div>
-      <div class="dash"><span>SPIT</span><div class="dash-track"><div id="spitFill"></div></div></div>
+      <div id="zhp" hidden></div>
+      <div class="dash"><span id="atkLabel">SPIT</span><div class="dash-track"><div id="spitFill"></div></div></div>
     </div>
   </div>
   <div class="hud-bottom">
     <div class="actions">
-      <button class="icon-btn act-btn" id="spitBtn" type="button">침 쏘기<small>F · 클릭</small><span class="cd" id="spitCd"></span></button>
+      <button class="icon-btn act-btn" id="spitBtn" type="button"><span id="atkName">침 쏘기</span><small>F · 클릭</small><span class="cd" id="spitCd"></span></button>
       <button class="icon-btn act-btn" id="dashBtn" type="button">대시<small>SPACE</small></button>
     </div>
     <ol id="ladder" aria-label="진화 단계"></ol>
@@ -270,7 +272,7 @@
       <li>갯지렁이를 먹으면 20초 동안 성장 속도가 3배가 됩니다. 어느 종이든 먹을 수 있습니다.</li>
       <li>태어날 때와 진화할 때마다 스킨을 고릅니다: 기본, 분홍 공주, 어린 아이. 고르는 동안 게임이 멈춥니다.</li>
       <li>아주 드물게 <b style="color:#3f7a1f">좀비 메갈로돈</b>이 나타납니다. 바다의 최상위 포식자로, 닿으면 하트와 상관없이 바로 게임 오버입니다. 침을 맞으면 1초 동안만 멈춥니다.</li>
-      <li>메갈로돈이 되면 바다 맨 밑의 거대 조개를 먹으러 갈 수 있습니다. 조개를 모두 먹으면…</li>
+      <li>메갈로돈이 되면 침 대신 <b>이빨로 물 수</b> 있습니다. 엔딩은 두 가지입니다: 바다 맨 밑의 거대 조개 3개를 모두 먹거나, 좀비 메갈로돈을 물어서 처치하거나.</li>
     </ul>
     <dl class="keys">
       <dt><kbd>MOUSE</kbd><kbd>TOUCH</kbd></dt><dd>가리키는 쪽으로 헤엄</dd>
@@ -316,7 +318,7 @@
       <div><dt>최고 기록</dt><dd id="endBest">-</dd></div>
     </dl>
     <div class="btn-row" id="endBtns">
-      <button class="mc-btn" id="clamBtn" type="button">거대 조개 먹으러 가기</button>
+      <button class="mc-btn" id="clamBtn" type="button">메갈로돈으로 계속하기</button>
       <button class="mc-btn" id="againBtn" type="button">다시 하기</button>
     </div>
   </div>
@@ -340,6 +342,9 @@ const ZOMBIE = 7;                    // 좀비 메갈로돈: 최상위 포식자
 const ZOMBIE_MEAN_WAIT = 420;        // 평균 등장 간격(초) — 아주 드물게
 const ZOMBIE_GRACE = 90;             // 게임 시작 후 이 시간 동안은 나오지 않는다
 const ZOMBIE_STAY = 45;              // 이 시간이 지나면 떠난다
+const ZOMBIE_HP = 6;                 // 메갈로돈 이빨로 6번 물면 처치
+const BITE_CD = 0.6, BITE_REACH = 14;
+const MEGA_ZOMBIE_WAIT = [20, 35];   // 메갈로돈 단계에선 좀비가 이 간격(초)으로 찾아온다 (엔딩 2를 위해)
 const SPIT_CD = 0.9, SPIT_SPEED = 230, SPIT_LIFE = 0.75, STUN_TIME = 3;
 const SAVE_KEY = 'pixelOcean.save';
 
@@ -625,7 +630,7 @@ let p, ents = [], parts = [], elapsed = 0, eaten = 0, deaths = 0, clock = 0;
 const cam = { x: 0, y: 0 };
 let viewBase = 180, shake = 0, flash = 0, flashColor = '255,255,255';
 let spawnTimer = 0, bubbleTimer = 0, nextId = 1, miniTick = 0;
-let finaleT = 0, swallowed = false, skinAfter = null;
+let finaleT = 0, swallowed = false, skinAfter = null, megaZombieCd = 0, victoryT = 0;
 const skinOf = () => SKINS[p.tier][p.skin || 0];
 let spits = [], worms = [], clams = [], mateSpawnCd = 0, bred = 0, megaTime = 0, clamHintShown = false;
 const keys = new Set();
@@ -686,7 +691,7 @@ const KEYMAP = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp:
 addEventListener('keydown', e => {
   if (KEYMAP[e.code]) { keys.add(KEYMAP[e.code]); pointer.active = false; e.preventDefault(); }
   else if (e.code === 'Space') { e.preventDefault(); dash(); }
-  else if (e.code === 'KeyF' || e.code === 'KeyJ') { e.preventDefault(); spit(); }
+  else if (e.code === 'KeyF' || e.code === 'KeyJ') { e.preventDefault(); attack(); }
   else if (e.code === 'KeyP') togglePause();
   else if (e.code === 'Enter' && (state === 'title' || state === 'end')) startGame();
   else if (state === 'skin' && /^(Digit|Numpad)[123]$/.test(e.code)) { e.preventDefault(); pickSkin(+e.code.slice(-1) - 1); }
@@ -701,7 +706,7 @@ cv.addEventListener('pointermove', e => {
 cv.addEventListener('pointerdown', e => {
   pointer.x = e.clientX; pointer.y = e.clientY; pointer.touch = e.pointerType !== 'mouse'; pointer.active = true;
   if (pointer.touch) cv.setPointerCapture(e.pointerId);
-  else if (e.button === 0) spit();
+  else if (e.button === 0) attack();
   e.preventDefault();
 });
 const releaseTouch = e => { if (e.pointerType !== 'mouse') pointer.active = false; };
@@ -718,24 +723,25 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && sta
 $('startBtn').addEventListener('click', startGame);
 $('againBtn').addEventListener('click', startGame);
 $('clamBtn').addEventListener('click', () => {
-  state = 'play'; paused = false;
+  state = 'play'; paused = false; audio();
+  megaZombieCd = rand(...MEGA_ZOMBIE_WAIT);
   $('endScreen').hidden = true; $('hud').hidden = false;
-  toast('바다 맨 밑의 거대 조개를 찾아라', 'good');
+  toast('거대 조개를 먹거나, 좀비 메갈로돈을 물어 처치하라', 'good');
   refreshHud(true);
 });
 $('resumeBtn').addEventListener('click', togglePause);
 $('pauseBtn').addEventListener('click', togglePause);
 $('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); dash(); });
-$('spitBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); spit(); });
+$('spitBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); attack(); });
 $('continueBtn').addEventListener('click', () => { const d = loadSave(); if (!d || !restore(d)) startGame(); });
 
 function serialize() {
-  return { v: 1, state, p, ents, worms, clams, elapsed, eaten, deaths, bred, megaTime, mateSpawnCd, clamHintShown, nextId };
+  return { v: 1, state, p, ents, worms, clams, elapsed, eaten, deaths, bred, megaTime, mateSpawnCd, clamHintShown, nextId, megaZombieCd };
 }
 function restore(d) {
   if (!d || d.v !== 1 || !d.p || !Array.isArray(d.ents)) return false;
   ({ p, ents, worms, clams, elapsed, eaten, deaths, bred, megaTime, mateSpawnCd, clamHintShown, nextId } = d);
-  p.spitCd = p.spitCd || 0;
+  p.spitCd = p.spitCd || 0; megaZombieCd = d.megaZombieCd || 20;
   spits = []; parts = []; keys.clear();
   viewBase = targetBase(p.tier); resizeView();
   $('startScreen').hidden = true; $('endScreen').hidden = true;
@@ -759,6 +765,7 @@ addEventListener('pagehide', autosave);
 document.addEventListener('visibilitychange', () => { if (document.hidden) autosave(); });
 
 function startGame() {
+  audio();   // 사용자 클릭 안에서 오디오를 깨워 둔다
   clearSave();
   state = 'title';
   reset();
@@ -891,15 +898,15 @@ function megaClear() {
   if (!(best > 0) || megaTime < best) { best = megaTime; try { localStorage.setItem('pixelOcean.best', String(megaTime)); } catch (e) {} }
   $('endBest').textContent = fmtKo(best);
   showEnd({ eyebrow: 'Final Evolution', title: '메갈로돈이 되었습니다', label: '플레이 시간', time: megaTime,
-    note: `번식 ${bred}회. 이제 바다 맨 밑의 거대 조개 ${CLAM_COUNT}개를 먹으러 갈 수 있습니다.`, canContinue: true });
+    note: `번식 ${bred}회. 이제 이빨로 물 수 있습니다. 엔딩은 두 가지: 거대 조개 ${CLAM_COUNT}개를 모두 먹거나, 좀비 메갈로돈을 물어 처치하세요.`, canContinue: true });
 }
 function clamsDone() {
   state = 'end';
   $('endArt').src = iconURL(skinOf().img[0], 8);
   clearSave();
   try { const b = parseFloat(localStorage.getItem('pixelOcean.best')); if (b > 0) $('endBest').textContent = fmtKo(b); } catch (e) {}
-  showEnd({ eyebrow: 'The End', title: '메갈로돈이 바다를 삼켰습니다', label: '전체 플레이 시간', time: elapsed,
-    note: `메갈로돈 도달 ${fmtKo(megaTime)} · 거대 조개 ${CLAM_COUNT}개 · 번식 ${bred}회`, canContinue: false });
+  showEnd({ eyebrow: 'Ending 1 · The End', title: '메갈로돈이 바다를 삼켰습니다', label: '전체 플레이 시간', time: elapsed,
+    note: `엔딩 1: 바다를 삼킨 자 · 메갈로돈 도달 ${fmtKo(megaTime)} · 거대 조개 ${CLAM_COUNT}개 · 번식 ${bred}회`, canContinue: false });
 }
 
 /* ================= 엔딩 연출: 거대해진 메갈로돈이 바다를 삼킨다 =================
@@ -1014,6 +1021,97 @@ function zombieGameOver(z) {
       note: `${SPECIES[p.tier].name} 단계에서 즉사 · 번식 ${bred}회`, canContinue: false });
   }, 1400);
 }
+/* ================= 소리 (WebAudio 칩튠) ================= */
+let actx = null;
+function audio() {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch (e) { actx = null; }
+  return actx;
+}
+function tone(freq, at, dur, type = 'square', vol = 0.07) {
+  const a = audio(); if (!a) return;
+  const t0 = a.currentTime + at, o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + 0.03);
+}
+const chomp = () => { tone(190, 0, 0.07, 'sawtooth', 0.06); tone(110, 0.05, 0.09, 'square', 0.05); };
+function fanfare() {
+  [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.12, 0.16));
+  tone(784, 0.55, 0.12); tone(880, 0.68, 0.12);
+  [[1047, 'square', 0.07], [659, 'triangle', 0.06], [523, 'triangle', 0.05]].forEach(([f, t, v]) => tone(f, 0.82, 0.9, t, v));
+  [1319, 1568, 2093].forEach((f, i) => tone(f, 1.0 + i * 0.1, 0.25, 'square', 0.035));
+}
+
+/* ================= 메갈로돈의 물기 / 좀비 처치 (엔딩 2) ================= */
+function attack() { if (p && p.tier === 6) bite(); else spit(); }
+function bite() {
+  if (state !== 'play' || paused || p.spitCd > 0) return;
+  if (pointer.active && !pointer.touch) {
+    const wx = cam.x + pointer.x / innerWidth * cv.width;
+    if (Math.abs(wx - p.x) > 4) p.face = wx > p.x ? 1 : -1;
+  }
+  const sp = SPECIES[6];
+  p.spitCd = BITE_CD; p.bite = 0.2;
+  p.vx += p.face * 140;                                   // 앞으로 덥석
+  const mx = p.x + p.face * (sp.w / 2 - 2), my = p.y + 2;
+  let hit = false;
+  for (const e of ents) {
+    if (e.dead || e.tier === 0) continue;
+    const es = SPECIES[e.tier];
+    if (Math.hypot(e.x - mx, e.y - my) > es.r + BITE_REACH) continue;
+    hit = true;
+    const dx = e.x - p.x, dy = e.y - p.y, d = Math.hypot(dx, dy) || 1;
+    if (e.tier === ZOMBIE) {
+      e.hp = (e.hp ?? ZOMBIE_HP) - 1; e.hurt = 0.3;
+      e.stun = 0.8; e.cool = 1.6; e.chase = 0;
+      e.vx = dx / d * 170; e.vy = dy / d * 170;
+      burst(mx, my, '#9dff4a', 14); burst(mx, my, '#8a2f3a', 10);
+      shake = 0.2;
+      if (e.hp <= 0) { zombieSlain(e); return; }
+      toast(`좀비 메갈로돈 HP ${e.hp} / ${ZOMBIE_HP}`, 'good');
+    } else if (e.tier < 6) {
+      e.dead = true; eaten++; burst(e.x, e.y, es.color, 12);
+    } else {
+      e.stun = STUN_TIME; e.cool = STUN_TIME + 3; e.vx = dx / d * 140; e.vy = dy / d * 140;
+    }
+  }
+  chomp();
+  if (!hit) for (let i = 0; i < 4; i++) bubble(mx, my);
+}
+function zombieSlain(z) {
+  state = 'victory'; victoryT = 0;
+  z.dead = true; eaten++;
+  burst(z.x, z.y, '#efe9d6', 50); burst(z.x, z.y, '#9dff4a', 40); burst(z.x, z.y, '#8a2f3a', 30);
+  shake = 0.5; flash = 0.6; flashColor = '255,255,255';
+  clearSave();
+  $('hud').hidden = true;
+  toast('좀비 메갈로돈을 처치했다!', 'good');
+  fanfare();
+}
+function zombieEnding() {
+  state = 'end';
+  try { const b = parseFloat(localStorage.getItem('pixelOcean.best')); if (b > 0) $('endBest').textContent = fmtKo(b); } catch (e) {}
+  $('endArt').src = iconURL(skinOf().img[0], 8);
+  showEnd({ eyebrow: 'Ending 2 · Zombie Slayer', title: '좀비 메갈로돈을 처치했습니다!', label: '전체 플레이 시간', time: elapsed,
+    note: `엔딩 2: 좀비 사냥꾼 · 메갈로돈 도달 ${fmtKo(megaTime)} · 번식 ${bred}회`, canContinue: false });
+}
+const FIREWORK = ['#ffd23f', '#ff6fb5', '#7cff1f', '#6fd3ff', '#ffffff', '#ff8a1f'];
+function updateVictory(dt) {
+  victoryT += dt;
+  if (Math.random() < dt * 9) {
+    const x = cam.x + rand(0.1, 0.9) * cv.width, y = cam.y + rand(0.08, 0.6) * cv.height;
+    const c = FIREWORK[Math.floor(Math.random() * FIREWORK.length)];
+    for (let i = 0; i < 36; i++) {
+      const a = i / 36 * Math.PI * 2, v = rand(40, 75);
+      parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rand(0.6, 1.1), size: 2, color: c });
+    }
+    tone(rand(900, 1600), 0, 0.12, 'square', 0.02);
+  }
+  if (victoryT > 3.4) zombieEnding();
+}
 const gainXp = base => { p.xp += base * (p.boost > 0 ? BOOST_MUL : 1); };
 const fmtKo = s => {
   s = Math.floor(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
@@ -1046,7 +1144,7 @@ function updatePlayer(dt) {
   if (Math.abs(p.vx) > 3) p.face = p.vx > 0 ? 1 : -1;
   p.t += dt * (0.6 + Math.hypot(p.vx, p.vy) / sp.speed);
   p.inv = Math.max(0, p.inv - dt); p.dash = Math.max(0, p.dash - dt); p.dashCd = Math.max(0, p.dashCd - dt);
-  p.breedCd = Math.max(0, p.breedCd - dt); p.spitCd = Math.max(0, p.spitCd - dt);
+  p.breedCd = Math.max(0, p.breedCd - dt); p.spitCd = Math.max(0, p.spitCd - dt); p.bite = Math.max(0, (p.bite || 0) - dt);
   if (p.boost > 0) {
     p.boost = Math.max(0, p.boost - dt);
     if (Math.random() < dt * 14) parts.push({ x: p.x + rand(-sp.w / 2, sp.w / 2), y: p.y + rand(-sp.h / 2, sp.h / 2), vx: 0, vy: -10, life: 0.5, size: 1, color: '#ffd23f' });
@@ -1102,7 +1200,9 @@ function update(dt) {
   clock += dt;
   const playing = state === 'play';
   if (playing) updatePlayer(dt);
+  if (state === 'victory') updateVictory(dt);
   for (const e of ents) {
+    if (e.hurt > 0) e.hurt -= dt;
     updateEntity(e, dt, playing);
     if (e.tier === ZOMBIE && Math.random() < dt * 12) parts.push({ x: e.x + rand(-16, 16), y: e.y + rand(-4, 6), vx: rand(-4, 4), vy: rand(4, 12), life: 0.9, size: 1, color: 'rgba(157,255,74,.7)' });
   }
@@ -1217,10 +1317,14 @@ function update(dt) {
     const vr = viewRadius() + 30;
     // 번식을 마친 동족은 화면 밖으로 나가면 사라진다
     ents = ents.filter(e => !((e.mated || (e.tier === ZOMBIE && e.stay < 0)) && Math.hypot(e.x - p.x, e.y - p.y) > vr));
-    if (state === 'play' && elapsed > ZOMBIE_GRACE && !ents.some(e => e.tier === ZOMBIE) && Math.random() < 0.5 / ZOMBIE_MEAN_WAIT) {
+    const noZombie = !ents.some(e => e.tier === ZOMBIE);
+    if (p.tier === 6 && noZombie) megaZombieCd -= 0.5;
+    const summon = p.tier === 6 ? megaZombieCd <= 0 : elapsed > ZOMBIE_GRACE && Math.random() < 0.5 / ZOMBIE_MEAN_WAIT;
+    if (state === 'play' && noZombie && summon) {
       spawn(ZOMBIE, false);
-      ents[ents.length - 1].stay = ZOMBIE_STAY;
-      toast('좀비 메갈로돈이 나타났다! 닿으면 즉사', 'bad');
+      Object.assign(ents[ents.length - 1], { stay: p.tier === 6 ? 60 : ZOMBIE_STAY, hp: ZOMBIE_HP });
+      megaZombieCd = rand(...MEGA_ZOMBIE_WAIT);
+      toast(p.tier === 6 ? '좀비 메갈로돈이 나타났다! 물어서 처치하라' : '좀비 메갈로돈이 나타났다! 닿으면 즉사', 'bad');
       flash = 0.35; flashColor = '120,255,90';
     }
     for (const e of ents) cnt[e.tier]++;
@@ -1255,7 +1359,7 @@ function placeCamera() {
   if (state === 'finale') {
     cam.x = p.x - vw / 2; cam.y = p.y - vh / 2; return;
   }
-  if (state === 'play' || state === 'end') {
+  if (state === 'play' || state === 'end' || state === 'victory') {
     cam.x = p.x - vw / 2; cam.y = p.y - vh / 2;
   } else {
     cam.x = WORLD.w / 2 - vw / 2 + Math.sin(clock * 0.08) * 500; cam.y = 60 + Math.sin(clock * 0.05) * 60;
@@ -1375,6 +1479,13 @@ function draw() {
     if (onScreen) {
       const fr = Math.floor(e.t * (e.tier === 0 ? 2 : 5)) & 1;
       ctx.drawImage(e.face < 0 ? sp.imgL[fr] : sp.img[fr], sx, sy);
+      if (e.tier === ZOMBIE && e.hp < ZOMBIE_HP) {   // 좀비 HP 바
+        const bw = 26, bx = Math.round(e.x - cx - bw / 2), by = sy - 7;
+        ctx.fillStyle = '#000'; ctx.fillRect(bx - 1, by - 1, bw + 2, 4);
+        ctx.fillStyle = '#3a0f12'; ctx.fillRect(bx, by, bw, 2);
+        ctx.fillStyle = '#9dff4a'; ctx.fillRect(bx, by, Math.round(bw * Math.max(0, e.hp) / ZOMBIE_HP), 2);
+      }
+      if (e.hurt > 0 && blink) { ctx.globalAlpha = 0.6; ctx.fillStyle = '#ff3b30'; ctx.fillRect(sx, sy + 3, sp.w, sp.h - 6); ctx.globalAlpha = 1; }
       if (e.stun > 0) {
         const a = clock * 6, rx = Math.max(4, sp.w * 0.35);
         ctx.fillStyle = '#ffe14d';
@@ -1396,13 +1507,18 @@ function draw() {
 
   // 플레이어
   if (state === 'finale') drawFinale(cx, cy);
-  else if (state === 'play' || state === 'end' || state === 'skin' || state === 'clear') {
+  else if (state === 'play' || state === 'end' || state === 'skin' || state === 'clear' || state === 'victory') {
     const sp = SPECIES[p.tier], sk = skinOf();
     const visible = !p.dead && (p.inv <= 0 || Math.floor(clock * 12) % 2 === 0 || state !== 'play');
     const sx = Math.round(p.x - sp.w / 2 - cx), sy = Math.round(p.y - sp.h / 2 - cy);
     if (visible) {
       const fr = Math.floor(p.t * 5) & 1;
       ctx.drawImage(p.face < 0 ? sk.imgL[fr] : sk.img[fr], sx, sy - sk.pad);
+    }
+    if (p.bite > 0) {   // 이빨 자국
+      const mx = Math.round(p.x - cx + p.face * (sp.w / 2 + 3)), my = Math.round(p.y - cy + 2), o = Math.round((0.2 - p.bite) * 20);
+      ctx.fillStyle = '#ffffff';
+      for (let i = -2; i <= 2; i++) { ctx.fillRect(mx + i * 3, my - 6 + o, 2, 3); ctx.fillRect(mx + i * 3 + 1, my + 4 - o, 2, 3); }
     }
     if (!p.dead) ctx.drawImage(MARKER, Math.round(p.x - cx) - 2, sy - sk.pad - 6 + (Math.floor(clock * 3) % 2));
   }
@@ -1479,7 +1595,7 @@ function refreshHud(force) {
   $('xpText').textContent = sp.need ? `${Math.floor(p.xp)} / ${sp.need}` : `조개 ${clamsEaten} / ${CLAM_COUNT}`;
   const prey = SPECIES[p.tier - 1].name, pred = next ? next.name + (p.tier + 1 < 6 ? ' 이상' : '') : '없음';
   $('hint').innerHTML = p.tier === 6
-    ? `<span class="ok">목표: 바다 맨 밑 거대 조개 (노란 표시)</span>`
+    ? `<span class="ok">엔딩 1: 거대 조개 3개 (노란 표시)</span><span class="bad">엔딩 2: 좀비 메갈로돈 처치</span>`
     : `<span class="ok">먹이: ${prey} · 갯지렁이</span><span class="bad">위험: ${pred}</span>`;
   heartsEl.querySelectorAll('img').forEach((im, i) => { im.src = i < p.hp ? HEART_FULL : HEART_EMPTY; });
   ladder.querySelectorAll('li').forEach((li, i) => { li.className = i + 1 < p.tier ? 'done' : i + 1 === p.tier ? 'now' : ''; });
@@ -1489,7 +1605,13 @@ function tickHud() {
   if (s !== lastSec) { lastSec = s; $('timer').textContent = fmtClock(elapsed); }
   $('dashFill').style.width = (p.dashCd > 0 ? (1 - p.dashCd / DASH_CD) * 100 : 100) + '%';
   $('dashBtn').style.opacity = p.dashCd > 0 ? 0.5 : 1;
-  const spitPct = (p.spitCd > 0 ? (1 - p.spitCd / SPIT_CD) * 100 : 100) + '%';
+  const isMega = p.tier === 6, atkMax = isMega ? BITE_CD : SPIT_CD;
+  $('atkName').textContent = isMega ? '물기' : '침 쏘기';
+  $('atkLabel').textContent = isMega ? 'BITE' : 'SPIT';
+  const z = ents.find(e => e.tier === ZOMBIE && !e.dead);
+  const zhp = $('zhp');
+  if (z) { zhp.hidden = false; zhp.textContent = `좀비 HP ${Math.max(0, z.hp ?? ZOMBIE_HP)} / ${ZOMBIE_HP}`; } else zhp.hidden = true;
+  const spitPct = (p.spitCd > 0 ? (1 - p.spitCd / atkMax) * 100 : 100) + '%';
   $('spitFill').style.width = spitPct; $('spitCd').style.width = spitPct;
   $('spitBtn').style.opacity = p.spitCd > 0 ? 0.6 : 1;
   const b = $('boost');
